@@ -5,6 +5,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "../include/lexer/lexer.hpp"
+#include "../src/lexer/lexer.cpp"
+
+#include "../include/lexer/Source.hpp"
+#include "../src/lexer/Source.cpp"
 
 
 using namespace std;
@@ -20,7 +24,7 @@ BOOST_AUTO_TEST_CASE( empty_source )
     string source = "";
     Lexer lexer(source);
     Token token = lexer.getNextToken();
-    //BOOST_CHECK_EQUAL(token.type, END_OF_FILE);
+    BOOST_CHECK_EQUAL(token.type, END_OF_FILE);
 }
 
 BOOST_AUTO_TEST_CASE( identyfier )
@@ -62,7 +66,8 @@ BOOST_AUTO_TEST_CASE( identyfier_started_by_number )
 {
     string source = " 4zmienna ";
     Lexer lexer(source);
-    BOOST_CHECK_EQUAL(lexer.getNextToken().type, ERROR_TOKEN);
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, NUMBER);
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, IDENTYFIER);
 }
 
 BOOST_AUTO_TEST_CASE( nothing_after_point_in_number )
@@ -186,6 +191,61 @@ BOOST_AUTO_TEST_CASE( unknow_token )
     Lexer lexer(source);
     Token token = lexer.getNextToken();
     BOOST_CHECK_EQUAL(token.type, UNKNOW);
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
+}
+
+BOOST_AUTO_TEST_CASE( number_and_other_sign )
+{
+    string source = "12+";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, NUMBER);
+    token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ADDITIVE_OPERATOR);
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
+}
+
+BOOST_AUTO_TEST_CASE( variable_pluas_variable )
+{
+    string source = "zmienna+zmienna";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, IDENTYFIER);
+    token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ADDITIVE_OPERATOR);
+    token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, IDENTYFIER);
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
+}
+
+BOOST_AUTO_TEST_CASE( for_test )
+{
+    string source = "for";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, KEY_WORD);
+    BOOST_CHECK_EQUAL(std::get<string>(token.value), "for");
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
+}
+
+BOOST_AUTO_TEST_CASE( data_type_test )
+{
+    string source = "double";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, DATA_TYPE);
+    BOOST_CHECK_EQUAL(std::get<string>(token.value), "double");
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
+}
+
+BOOST_AUTO_TEST_CASE( semicolon_test )
+{
+    string source = "test;";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, IDENTYFIER);
+    BOOST_CHECK_EQUAL(std::get<string>(token.value), "test");
+    BOOST_CHECK_EQUAL(lexer.getNextToken().type, SEMICOLON);
     BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
 }
 

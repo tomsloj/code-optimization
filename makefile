@@ -28,7 +28,7 @@ clean:
 # Tests
 .PHONY: test
 test:
-	@g++  test/tester.cpp $(CFLAGS) -o bin/testfile -lboost_unit_test_framework build/lexer/lexer.o
+	@g++  test/tester.cpp $(CFLAGS) -o bin/testfile -lboost_unit_test_framework
 	@./bin/testfile --log_level=test_suite 
 
 # Spikes

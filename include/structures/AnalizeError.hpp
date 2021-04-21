@@ -1,3 +1,6 @@
+#ifndef ANALIZE_ERROR_HPP
+#define ANALIZE_ERROR_HPP
+
 #include <string>
 
 enum ErrorType 
@@ -22,3 +25,5 @@ struct AnalizeError
     int line;
     int signNumber;
 };
+
+#endif

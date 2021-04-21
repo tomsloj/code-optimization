@@ -4,17 +4,22 @@
 
 using namespace std;
 
-Lexer::Lexer(std::string source)
+Lexer::Lexer(std::string source, bool isFile /*= false*/)
 {
     key_word_map.insert(make_pair("int", DATA_TYPE));
     key_word_map.insert(make_pair("long", DATA_TYPE));
     key_word_map.insert(make_pair("double", DATA_TYPE));
     key_word_map.insert(make_pair("for", KEY_WORD));
 
-    for (auto x : source)
-    {
-        this->source.push_back(x);
-    }
+    if(isFile)
+        this->source.loadFile(source);
+    else
+        this->source.loadString(source);
+
+    // for (auto x : source)
+    // {
+    //     this->source.push_back(x);
+    // }
     getChar();
     while(isspace(ch))
     {
@@ -25,16 +30,7 @@ Lexer::Lexer(std::string source)
 
 void Lexer::getChar()
 {
-    ch = ' ';
-    if(!source.empty())
-    {
-        ch = source.front();
-        source.pop_front();
-    }
-    else
-    {
-        ch = EOF;
-    }
+    ch = source.getChar();
 }
 
 Token Lexer::getNextToken()
@@ -204,6 +200,26 @@ Token Lexer::getNextToken()
 
     try
     {
+        token = buildSemicolon();
+    }
+    catch(AnalizeError e)
+    {
+        writeError(e);
+        while(isspace(ch))
+            getChar();
+        token = new Token;
+        token->type = ERROR_TOKEN;
+        return *token;
+    }
+    if( token != NULL )
+    {
+        while(isspace(ch))
+            getChar();
+        return *token;
+    }
+
+    try
+    {
         token = buildEOF();
     }
     catch(AnalizeError e)
@@ -258,29 +274,31 @@ Token* Lexer::buildIdentyfier()
             identyfier += ch;
             getChar();
         }
-        if(!isspace(ch) && ch != EOF)
-        {
-            string message = "Not allowed sign: " + ch;
-            string codePart = identyfier;
-            while(!isspace(ch) && ch != EOF)
-            {
-                codePart += ch;
-                getChar();
-            }
+        // if(!isspace(ch) && ch != EOF)
+        // {
+        //     string message = "Not allowed sign: " + ch;
+        //     string codePart = identyfier;
+        //     while(!isspace(ch) && ch != EOF)
+        //     {
+        //         codePart += ch;
+        //         getChar();
+        //     }
 
-            AnalizeError error = 
-            {
-                NOT_ALLOWED_SIGN,
-                LEXER,
-                message,
-                codePart
-            };
-            throw error;
-        }
+        //     AnalizeError error = 
+        //     {
+        //         NOT_ALLOWED_SIGN,
+        //         LEXER,
+        //         message,
+        //         codePart
+        //     };
+        //     throw error;
+        // }
         Token* token = new Token;
         token->value = identyfier;
-        token->type = IDENTYFIER;
-        
+        if( key_word_map.find(identyfier) == key_word_map.end() )
+            token->type = IDENTYFIER;
+        else
+            token->type = key_word_map[identyfier];
         return token;
     }
     return NULL;
@@ -335,32 +353,33 @@ Token* Lexer::buildNumber()
                 getChar();
             }
         }
-        // if we have other sign than whitespace
-        if(!isspace(ch) && ch != EOF)
-        {
-            string message = "Expected whitespace after number but get: ";
-            message += ch;
-            string codePart;
-            if(valueAfterPoint == 0.0)
-                codePart = to_string(value);
-            else
-                codePart = to_string(double(value) + valueAfterPoint);
-            // read characters till white space
-            while(!isspace(ch) && ch != EOF)
-            {
-                codePart += ch;
-                getChar();
-            }
+        // // if we have other sign than whitespace
+        // if(!isspace(ch) && ch != EOF && ch != '+' && ch != '-' && ch != '(' &&
+        // ch != ')' && ch != '*' ch != '/' ch != "<"  )
+        // {
+        //     string message = "Expected whitespace after number but get: ";
+        //     message += ch;
+        //     string codePart;
+        //     if(valueAfterPoint == 0.0)
+        //         codePart = to_string(value);
+        //     else
+        //         codePart = to_string(double(value) + valueAfterPoint);
+        //     // read characters till white space
+        //     while(!isspace(ch) && ch != EOF)
+        //     {
+        //         codePart += ch;
+        //         getChar();
+        //     }
             
-            AnalizeError error = 
-            {
-                WRONG_NUMBER,
-                LEXER,
-                message,
-                codePart
-            };
-            throw error;
-        }
+        //     AnalizeError error = 
+        //     {
+        //         WRONG_NUMBER,
+        //         LEXER,
+        //         message,
+        //         codePart
+        //     };
+        //     throw error;
+        // }
         Token* token = new Token;
         token->type = NUMBER;
         if(valueAfterPoint == 0.0)
@@ -386,7 +405,6 @@ Token* Lexer::buildAssigmentAndEquality()
             return token;
         }
         else
-        if(isspace(ch) || ch == EOF)
         {
             Token* token = new Token;
             token->type = ASSIGMENT_OPERATOR;
@@ -514,6 +532,18 @@ Token* Lexer::buildSquareBracket()
     {
         Token* token = new Token;
         token->type = CLOSING_SQUARE_BRACKET;
+        getChar();
+        return token;
+    }
+    return NULL;
+}
+
+Token* Lexer::buildSemicolon()
+{
+    if(ch == ';')
+    {
+        Token* token = new Token;
+        token->type = SEMICOLON;
         getChar();
         return token;
     }

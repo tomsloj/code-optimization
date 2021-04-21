@@ -1,3 +1,6 @@
+#ifndef TOKEN_HPP
+#define TOKEN_HPP
+
 #include <variant>
 #include <string>
 
@@ -19,6 +22,7 @@ enum TokenType
     OPENING_SQUARE_BRACKET,
     CLOSING_SQUARE_BRACKET,
     NUMBER,
+    SEMICOLON,
     END_OF_FILE,
     UNKNOW,
     ERROR_TOKEN
@@ -31,3 +35,5 @@ struct Token
     int line_number = 1;
     int position_in_line = 1;
 };
+
+#endif
