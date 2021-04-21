@@ -8,9 +8,9 @@ Source::~Source()
 
 char Source::getChar()
 {
+    char ch = ' ';
     if(sourceType == STRING_TYPE)
     {
-        char ch = ' ';
         if(!source.empty())
         {
             ch = source.front();
@@ -20,17 +20,20 @@ char Source::getChar()
         {
             ch = EOF;
         }
-        return ch;
     }
     else
     {
-        char ch;
-        if(fileReader.get(ch))
-            return ch;
-        else
-            return EOF;
-
+        if(!fileReader.get(ch))
+            ch = EOF;
     }
+    if(ch == '\n')
+    {
+        numberOfLine ++;
+        signNumber = 0;
+    }
+    else
+        signNumber ++;
+    return ch;
 }
 
 void Source::loadFile(std::string fileName)
@@ -46,4 +49,9 @@ void Source::loadString(std::string source)
     {
         this->source.push(x);
     }
+}
+
+std::pair<int, int>Source::getPlace()
+{
+    return std::make_pair(numberOfLine, signNumber);
 }

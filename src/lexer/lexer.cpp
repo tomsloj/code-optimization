@@ -37,6 +37,9 @@ Token Lexer::getNextToken()
 {
     int i, nextch;
 
+    pair<int, int>place = source.getPlace();
+    cout << place.first << " " << place.second << "\n";
+
     Token* token = NULL;
     try
     {
@@ -44,6 +47,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -64,6 +69,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -84,6 +91,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -104,6 +113,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -124,6 +135,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -144,6 +157,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -164,6 +179,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -184,6 +201,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -204,6 +223,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -224,6 +245,8 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
+        e.line = place.first;
+        e.signNumber = place.second;
         writeError(e);
         while(isspace(ch))
             getChar();
@@ -257,6 +280,8 @@ Token Lexer::getNextToken()
             message,
             codePart
         };
+        error.line = place.first;
+        error.signNumber = place.second;
         writeError(error);
         token = new Token;
         token->type = UNKNOW;
@@ -566,8 +591,8 @@ Token* Lexer::buildEOF()
 
 void Lexer::writeError(AnalizeError error)
 {
-    cout << "LEXER ERROR: line " + to_string(error.line + 1) + 
-    "; sign " + to_string(error.signNumber + 1) + "\n";
+    cout << "LEXER ERROR: line " + to_string(error.line) + 
+    "; sign " + to_string(error.signNumber) + "\n";
     cout << error.codePart << "\n";
     cout << error.message << "\n";
 }

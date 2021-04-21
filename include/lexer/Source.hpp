@@ -15,11 +15,15 @@ class Source
         std::ifstream fileReader;
         SourceType sourceType;
 
+        int numberOfLine = 1;
+        int signNumber = 0;
+
     public:
         ~Source();
         char getChar();
         void loadFile(std::string fileName);
         void loadString(std::string source);
+        std::pair<int, int>getPlace();
 
 };
 
