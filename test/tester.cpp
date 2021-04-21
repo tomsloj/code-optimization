@@ -249,5 +249,37 @@ BOOST_AUTO_TEST_CASE( semicolon_test )
     BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
 }
 
+BOOST_AUTO_TEST_CASE( integer_out_of_range_test )
+{
+    string source = "102030378238924;";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ERROR_TOKEN);
+}
+
+BOOST_AUTO_TEST_CASE( double_out_of_range_test1 )
+{
+    string source = "5000000.123;";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ERROR_TOKEN);
+}
+
+BOOST_AUTO_TEST_CASE( double_out_of_range_test2 )
+{
+    string source = "5.14217419164932747533489769482123;";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ERROR_TOKEN);
+}
+
+BOOST_AUTO_TEST_CASE( too_long_identyfier )
+{
+    string source = "fhdjskaldnsmajdnsjakeotmgnsjakworkfjsndjfkwpeirjgkbxmzfikdjfosadpofprsgjspfjgxnlnvxvnilosjiorwjhigoshlfsnvlznvlsijfojwfoisfjlkslgjsljfio";
+    Lexer lexer(source);
+    Token token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, ERROR_TOKEN);
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

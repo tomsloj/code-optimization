@@ -271,28 +271,24 @@ Token* Lexer::buildIdentyfier()
         string identyfier = "";
         while(isalpha(ch) || ch == '_' || isdigit(ch))
         {
-            identyfier += ch;
+            if(identyfier.size() <= MAX_IDENTYFIER_SIZE)
+                identyfier += ch;
             getChar();
         }
-        // if(!isspace(ch) && ch != EOF)
-        // {
-        //     string message = "Not allowed sign: " + ch;
-        //     string codePart = identyfier;
-        //     while(!isspace(ch) && ch != EOF)
-        //     {
-        //         codePart += ch;
-        //         getChar();
-        //     }
-
-        //     AnalizeError error = 
-        //     {
-        //         NOT_ALLOWED_SIGN,
-        //         LEXER,
-        //         message,
-        //         codePart
-        //     };
-        //     throw error;
-        // }
+        if(identyfier.size() > MAX_IDENTYFIER_SIZE)
+        {
+            // error, expected number after point
+            string message = "Too long identyfier; Max size is 64 signs";
+            // read characters till white space
+            AnalizeError error = 
+            {
+                TOO_LONG_IDENTYFIER,
+                LEXER,
+                message,
+                identyfier + "..."
+            };
+            throw error;
+        }
         Token* token = new Token;
         token->value = identyfier;
         if( key_word_map.find(identyfier) == key_word_map.end() )
@@ -306,19 +302,33 @@ Token* Lexer::buildIdentyfier()
 
 Token* Lexer::buildNumber()
 {
-    // TODO sprawdzać czy nie przekroczyliśmy typu
+    string codePart = "";
     if(isdigit(ch))
     {
+        codePart += ch;
+        bool outOfRange = false;
         unsigned long long value = 0;
         double valueAfterPoint = 0.0;
         double multiplier = 0.1;
         while(isdigit(ch))
         {
             value = value * 10 + (ch - ZERO);
+            codePart += ch;
             getChar();
+            if(value >= 1000000000000)
+            {
+                value = 0;
+                outOfRange = true;
+            }
         }
         if(ch == POINT)
         {
+            if(value >= 10000)
+            {
+                value = 0;
+                outOfRange = true;
+            }
+            codePart += ch;
             getChar();
             if(!isdigit(ch))
             {
@@ -329,7 +339,7 @@ Token* Lexer::buildNumber()
                 else
                     message += ": ";
                     message += ch;
-                string codePart = to_string(value) + ".";
+                //string codePart = to_string(value) + ".";
                 // read characters till white space
                 while(!isspace(ch) && ch != EOF)
                 {
@@ -350,36 +360,29 @@ Token* Lexer::buildNumber()
             {
                 valueAfterPoint = valueAfterPoint + static_cast<double>(ch - ZERO) * multiplier;
                 multiplier *= 0.1;
+                codePart += ch;
                 getChar();
+                if(multiplier < 0.000000000000001)
+                {
+                    multiplier = 0.1;
+                    outOfRange = true;
+                }
             }
         }
-        // // if we have other sign than whitespace
-        // if(!isspace(ch) && ch != EOF && ch != '+' && ch != '-' && ch != '(' &&
-        // ch != ')' && ch != '*' ch != '/' ch != "<"  )
-        // {
-        //     string message = "Expected whitespace after number but get: ";
-        //     message += ch;
-        //     string codePart;
-        //     if(valueAfterPoint == 0.0)
-        //         codePart = to_string(value);
-        //     else
-        //         codePart = to_string(double(value) + valueAfterPoint);
-        //     // read characters till white space
-        //     while(!isspace(ch) && ch != EOF)
-        //     {
-        //         codePart += ch;
-        //         getChar();
-        //     }
-            
-        //     AnalizeError error = 
-        //     {
-        //         WRONG_NUMBER,
-        //         LEXER,
-        //         message,
-        //         codePart
-        //     };
-        //     throw error;
-        // }
+        if(outOfRange)
+        {
+            // error, expected number after point
+            string message = "Number out of range";
+            // read characters till white space
+            AnalizeError error = 
+            {
+                VALUE_OUT_OF_RANGE,
+                LEXER,
+                message,
+                codePart
+            };
+            throw error;
+        }
         Token* token = new Token;
         token->type = NUMBER;
         if(valueAfterPoint == 0.0)

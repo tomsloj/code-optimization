@@ -8,7 +8,9 @@ enum ErrorType
     UNCORRECT_NAME,
     WRONG_NUMBER,
     NOT_ALLOWED_SIGN,
-    UNKNOW_TOKEN
+    UNKNOW_TOKEN,
+    VALUE_OUT_OF_RANGE,
+    TOO_LONG_IDENTYFIER
 };
 
 enum ModuleType

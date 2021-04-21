@@ -15,6 +15,7 @@ class Lexer
     private:
         const int ZERO = '0';
         const char POINT = '.';
+        const int MAX_IDENTYFIER_SIZE = 64;
         char ch;
         Source source;
         std::map<std::string, TokenType>key_word_map;
