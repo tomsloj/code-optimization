@@ -21,6 +21,7 @@ class Lexer
         std::map<std::string, TokenType>key_word_map;
 
         void getChar();
+        bool checkToken(Token* token);
 
         Token* buildIdentyfier();
         Token* buildNumber();

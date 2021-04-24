@@ -11,27 +11,8 @@ int main(int argc, char *argv[])
     {
         Lexer lexer(argv[1], true);
         auto x = lexer.getNextToken();
-        std::cout << x.type << "type \n";
-        std::cout << std::get<std::string>(x.value) << "\n";
-        
-        x = lexer.getNextToken();
-        std::cout << x.type << " type\n";
-        std::cout << std::get<std::string>(x.value) << "\n";
-
-        x = lexer.getNextToken();
-        std::cout << x.type << "type\n";
-
-        x = lexer.getNextToken();
-        std::cout << x.type << " type\n";
-
-        x = lexer.getNextToken();
-        std::cout << x.type << " type\n";
-
-        x = lexer.getNextToken();
-        std::cout << x.type << " type\n";
-
-        x = lexer.getNextToken();
-        std::cout << x.type << " type\n";
+        std::cout << x.type << " - number of token type \n";
+        std::cout << std::get<std::string>(x.value) << " - value\n";
     }
     
 }

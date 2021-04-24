@@ -35,151 +35,48 @@ Token Lexer::getNextToken()
     try
     {
         token = buildIdentyfier();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildNumber();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildAssigmentAndEquality();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
-    
-    try
-    {
+        if(checkToken(token))
+            return *token;
+
         token = buildOperations();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
-    
-    try
-    {
+        if(checkToken(token))
+            return *token;
+
         token = buildLogicalOperator();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildRoundBracket();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    } 
-    
-    try
-    {
+        if(checkToken(token))
+            return *token;
+
         token = buildBlockBracket();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildSquareBracket();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildSemicolon();
-    }
-    catch(AnalizeError e)
-    {
-        return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
-    }
+        if(checkToken(token))
+            return *token;
 
-    try
-    {
         token = buildEOF();
+        if(checkToken(token))
+            return *token;
     }
     catch(AnalizeError e)
     {
         return catchError(e, place);
-    }
-    if( token != NULL )
-    {
-        while(isspace(ch))
-            getChar();
-        return *token;
     }
 
     if(token == NULL)
@@ -199,15 +96,26 @@ Token Lexer::getNextToken()
             UNKNOW_TOKEN,
             LEXER,
             message,
-            codePart
+            codePart,
+            place.first,
+            place.second
         };
-        error.line = place.first;
-        error.signNumber = place.second;
         writeError(error);
         token = new Token;
         token->type = UNKNOW;
     }
     return *token;
+}
+
+bool Lexer::checkToken(Token* token)
+{
+    if( token != NULL )
+    {
+        while(isspace(ch))
+            getChar();
+        return true;
+    }
+    return false;
 }
 
 Token* Lexer::buildIdentyfier()
@@ -402,20 +310,11 @@ Token* Lexer::buildOperations()
 
 Token* Lexer::buildLogicalOperator()
 {
-    if(ch == '<')
+    if(ch == '<' || ch == '>')
     {
         Token* token = new Token;
         token->type = RELATIONAL_OPERATOR;
-        token->value = "<";
-        getChar();
-        return token;
-    }
-    else
-    if(ch == '>')
-    {
-        Token* token = new Token;
-        token->type = RELATIONAL_OPERATOR;
-        token->value = ">";
+        token->value = std::string(1, ch);;
         getChar();
         return token;
     }
