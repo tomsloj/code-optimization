@@ -31,8 +31,6 @@ Token Lexer::getNextToken()
     int i, nextch;
     pair<int, int>place = source.getPlace();
 
-    cout << ch << " get token\n";
-
     Token* token = NULL;
     try
     {
