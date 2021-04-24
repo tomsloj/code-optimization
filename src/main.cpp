@@ -13,6 +13,11 @@ int main(int argc, char *argv[])
         auto x = lexer.getNextToken();
         std::cout << x.type << " - number of token type \n";
         std::cout << std::get<std::string>(x.value) << " - value\n";
+        while(x.type != END_OF_FILE)
+        {
+            x = lexer.getNextToken();
+            std::cout << x.type << " - number of token type \n";
+        }
     }
     
 }

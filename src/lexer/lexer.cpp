@@ -31,6 +31,8 @@ Token Lexer::getNextToken()
     int i, nextch;
     pair<int, int>place = source.getPlace();
 
+    cout << ch << " get token\n";
+
     Token* token = NULL;
     try
     {
@@ -286,8 +288,7 @@ Token* Lexer::buildOperations()
             return token;
         }
     }
-    else
-    if(ch == '-')
+    else if(ch == '-')
     {
         getChar();
         if(ch == '-')
@@ -304,6 +305,14 @@ Token* Lexer::buildOperations()
             token->value = "-";
             return token;
         }
+    }
+    else if(ch == '*' || ch == '/')
+    {
+        Token* token = new Token;
+        token->type = MULTIPLICATIVE_OPERATOR;
+        token->value = string(1, ch);
+        getChar();
+        return token;        
     }
     return NULL;
 }
@@ -330,8 +339,7 @@ Token* Lexer::buildRoundBracket()
         getChar();
         return token;
     }
-    else
-    if(ch == ')')
+    else if(ch == ')')
     {
         Token* token = new Token;
         token->type = CLOSING_ROUND_BRACKET;
@@ -350,8 +358,7 @@ Token* Lexer::buildBlockBracket()
         getChar();
         return token;
     }
-    else
-    if(ch == '}')
+    else if(ch == '}')
     {
         Token* token = new Token;
         token->type = CLOSING_BLOCK_BRACKET;
@@ -370,8 +377,7 @@ Token* Lexer::buildSquareBracket()
         getChar();
         return token;
     }
-    else
-    if(ch == ']')
+    else if(ch == ']')
     {
         Token* token = new Token;
         token->type = CLOSING_SQUARE_BRACKET;

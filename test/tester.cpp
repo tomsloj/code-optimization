@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE( number_with_point_and_many_spaces )
 
 BOOST_AUTO_TEST_CASE( aritmetic_operators )
 {
-    string source = "= ==  =  +  ++ - -- +-";
+    string source = "= ==  =  +  ++ - -- +- * /";
     Lexer lexer(source);
     Token token = lexer.getNextToken();
     BOOST_CHECK_EQUAL(token.type, ASSIGMENT_OPERATOR);
@@ -136,6 +136,12 @@ BOOST_AUTO_TEST_CASE( aritmetic_operators )
     token = lexer.getNextToken();
     BOOST_CHECK_EQUAL(token.type, ADDITIVE_OPERATOR);
     BOOST_CHECK_EQUAL(std::get<string>(token.value), "-");
+    token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, MULTIPLICATIVE_OPERATOR);
+    BOOST_CHECK_EQUAL(std::get<string>(token.value), "*");
+    token = lexer.getNextToken();
+    BOOST_CHECK_EQUAL(token.type, MULTIPLICATIVE_OPERATOR);
+    BOOST_CHECK_EQUAL(std::get<string>(token.value), "/");
     BOOST_CHECK_EQUAL(lexer.getNextToken().type, END_OF_FILE);
 }
 
