@@ -33,6 +33,8 @@ class Lexer
         Token* buildSemicolon();
         Token* buildEOF();
 
+        Token catchError(AnalizeError e, std::pair<int, int>place);
+
         void writeError(AnalizeError error);
 
     public:

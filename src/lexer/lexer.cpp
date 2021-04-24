@@ -1,7 +1,5 @@
 #include "../../include/lexer/lexer.hpp"
 
-#include <unistd.h>
-
 using namespace std;
 
 Lexer::Lexer(std::string source, bool isFile /*= false*/)
@@ -16,16 +14,11 @@ Lexer::Lexer(std::string source, bool isFile /*= false*/)
     else
         this->source.loadString(source);
 
-    // for (auto x : source)
-    // {
-    //     this->source.push_back(x);
-    // }
     getChar();
     while(isspace(ch))
     {
         getChar();
     }
-    
 }
 
 void Lexer::getChar()
@@ -36,9 +29,7 @@ void Lexer::getChar()
 Token Lexer::getNextToken()
 {
     int i, nextch;
-
     pair<int, int>place = source.getPlace();
-    cout << place.first << " " << place.second << "\n";
 
     Token* token = NULL;
     try
@@ -47,14 +38,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -69,14 +53,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -91,14 +68,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -113,14 +83,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -135,14 +98,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -157,14 +113,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -179,14 +128,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -201,14 +143,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -223,14 +158,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -245,14 +173,7 @@ Token Lexer::getNextToken()
     }
     catch(AnalizeError e)
     {
-        e.line = place.first;
-        e.signNumber = place.second;
-        writeError(e);
-        while(isspace(ch))
-            getChar();
-        token = new Token;
-        token->type = ERROR_TOKEN;
-        return *token;
+        return catchError(e, place);
     }
     if( token != NULL )
     {
@@ -302,9 +223,7 @@ Token* Lexer::buildIdentyfier()
         }
         if(identyfier.size() > MAX_IDENTYFIER_SIZE)
         {
-            // error, expected number after point
             string message = "Too long identyfier; Max size is 64 signs";
-            // read characters till white space
             AnalizeError error = 
             {
                 TOO_LONG_IDENTYFIER,
@@ -364,7 +283,6 @@ Token* Lexer::buildNumber()
                 else
                     message += ": ";
                     message += ch;
-                //string codePart = to_string(value) + ".";
                 // read characters till white space
                 while(!isspace(ch) && ch != EOF)
                 {
@@ -396,9 +314,7 @@ Token* Lexer::buildNumber()
         }
         if(outOfRange)
         {
-            // error, expected number after point
             string message = "Number out of range";
-            // read characters till white space
             AnalizeError error = 
             {
                 VALUE_OUT_OF_RANGE,
@@ -587,6 +503,19 @@ Token* Lexer::buildEOF()
         return token;
     }
     return NULL;
+}
+
+Token Lexer::catchError(AnalizeError e, pair<int, int> place)
+{
+    Token* token;
+    e.line = place.first;
+    e.signNumber = place.second;
+    writeError(e);
+    while(isspace(ch))
+        getChar();
+    token = new Token;
+    token->type = ERROR_TOKEN;
+    return *token;
 }
 
 void Lexer::writeError(AnalizeError error)
