@@ -4,8 +4,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../include/lexer/lexer.hpp"
-#include "../src/lexer/lexer.cpp"
+#include "../include/lexer/Lexer.hpp"
+#include "../src/lexer/Lexer.cpp"
 
 #include "../include/lexer/Source.hpp"
 #include "../src/lexer/Source.cpp"

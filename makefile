@@ -19,6 +19,7 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)
 	@mkdir -p $(BUILDDIR)/lexer
 	@mkdir -p $(BUILDDIR)/structures
+	@mkdir -p $(BUILDDIR)/parser
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
