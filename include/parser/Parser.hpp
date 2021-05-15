@@ -6,7 +6,7 @@
 #include "../lexer/Lexer.hpp"
 #include "../structures/Token.hpp"
 #include "../structures/AnalizeError.hpp"
-#include "../ParserTree/ParserTree.hpp"
+// #include "../ParserTree/ParserTree.hpp"
 
 #include "../ParserTree/Node.hpp"
 
@@ -21,22 +21,20 @@ class Parser
 
         AnalizeError createError(ErrorType type, string message, string codePart, Token token);
     public:
-        Parser(std::string path, bool isFile = true);
+        Parser(std::string path, bool isFile = false);
         ~Parser();
 
-        void getNextToken();
-
-        bool parse();
-        bool parseProgram();
-        bool parseOperation();
-        bool parseLoop();
-        bool parseVariable();
-        bool parseAssigment();
-        bool parseInitiation();
-        bool parsePreIncrementation();
-        bool parseCondition();
-        bool parseArithmeticExpression();
-        bool parsePrimaryExpression();
+        optional<ParserTree> parse();
+        optional<Program> parseProgram();
+        optional<Operation> parseOperation();
+        optional<Loop> parseLoop();
+        optional<Variable> parseVariable();
+        optional<Assigment> parseAssigment();
+        optional<Initiation> parseInitiation();
+        optional<PreIncrementation> parsePreIncrementation();
+        optional<Condition> parseCondition();
+        optional<ArithmeticExpression> parseArithmeticExpression();
+        optional<PrimaryExpression> parsePrimaryExpression();
 
 };
 
