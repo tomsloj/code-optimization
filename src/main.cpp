@@ -1,5 +1,7 @@
 #include <iostream>
-#include "../include/lexer/Lexer.hpp"
+// #include "../include/lexer/Lexer.hpp"
+#include "../include/parser/Parser.hpp"
+
 
 int main(int argc, char *argv[])
 {
@@ -9,15 +11,17 @@ int main(int argc, char *argv[])
     }
     else if(argc == 2)
     {
-        Lexer lexer(argv[1], true);
-        auto x = lexer.getNextToken();
-        std::cout << x.type << " - number of token type \n";
-        std::cout << std::get<std::string>(x.value) << " - value\n";
-        while(x.type != END_OF_FILE)
-        {
-            x = lexer.getNextToken();
-            std::cout << x.type << " - number of token type \n";
-        }
+        Parser parser(argv[1], true);
+        parser.parse();
+        // Lexer lexer(argv[1], true);
+        // auto x = lexer.getNextToken();
+        // std::cout << x.type << " - number of token type \n";
+        // std::cout << std::get<std::string>(x.value) << " - value\n";
+        // while(x.type != END_OF_FILE)
+        // {
+        //     x = lexer.getNextToken();
+        //     std::cout << x.type << " - number of token type \n";
+        // }
     }
     
 }

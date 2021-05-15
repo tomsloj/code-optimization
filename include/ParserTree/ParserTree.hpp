@@ -3,12 +3,14 @@
 
 #include "Node.hpp"
 
+class Program;
+
 class ParserTree
 {
     private:
-        Program program;
+        //Program program;
     public:
-        ParserTree(Program root);
+        //ParserTree(Program root);
 
 };
 

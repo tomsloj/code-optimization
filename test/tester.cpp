@@ -10,6 +10,9 @@
 #include "../include/lexer/Source.hpp"
 #include "../src/lexer/Source.cpp"
 
+#include "../include/parser/Parser.hpp"
+#include "../src/parser/Parser.cpp"
+
 
 using namespace std;
 
@@ -285,6 +288,34 @@ BOOST_AUTO_TEST_CASE( too_long_identyfier )
     Lexer lexer(source);
     Token token = lexer.getNextToken();
     BOOST_CHECK_EQUAL(token.type, ERROR_TOKEN);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+/**
+ * parser tests
+ */
+BOOST_AUTO_TEST_SUITE( parserTest )
+
+BOOST_AUTO_TEST_CASE( parse_variable )
+{
+    string source = "dsas;";
+    Parser parser(source);
+    BOOST_CHECK_EQUAL(parser.parse(), true);
+}
+
+BOOST_AUTO_TEST_CASE( parse_table )
+{
+    string source = "dsas[21];";
+    Parser parser(source);
+    BOOST_CHECK_EQUAL(parser.parse(), true);
+}
+
+BOOST_AUTO_TEST_CASE( parse_table_with_arithmetic_expression )
+{
+    string source = "dsas[21+43*fasd];";
+    Parser parser(source);
+    BOOST_CHECK_EQUAL(parser.parse(), true);
 }
 
 

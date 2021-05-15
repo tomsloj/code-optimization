@@ -10,12 +10,15 @@ enum ErrorType
     NOT_ALLOWED_SIGN,
     UNKNOW_TOKEN,
     VALUE_OUT_OF_RANGE,
-    TOO_LONG_IDENTYFIER
+    TOO_LONG_IDENTYFIER,
+    EXPECTED_EXPRESSION_AFTER_OPERATOR,
+
 };
 
 enum ModuleType
 {
-    LEXER
+    LEXER,
+    PARSER,
 };
 
 struct AnalizeError
