@@ -16,10 +16,17 @@ optional<ParserTree> Parser::parse()
 {
     token = lexer->getNextToken();
 
-    optional<Program*> program = parseProgram();
+    optional<Program*> program;
+    try
+    {
+        program = parseProgram();
+    }
+    catch(AnalizeError e)
+    {
+        writeError(e);
+    }
     if(program)
     {
-        cout << "Przeparsowano program\n";
         return ParserTree(**program);
     }
     else
@@ -31,10 +38,17 @@ optional<Program*> Parser::parseProgram()
     Program* program = new Program();
     while(token.type != END_OF_FILE)
     {
-        optional<Operation*> operation = parseOperation();
+        optional<Operation*> operation;
+        try
+        {
+            operation = parseOperation();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
         if(operation)
         {
-            cout << "Przeparsowano operację\n";
             program->addOperation(*operation);
         }
         else
@@ -46,14 +60,29 @@ optional<Program*> Parser::parseProgram()
 optional<Operation*> Parser::parseOperation()
 {
     Operation* operation = new Operation();
-    optional<Loop*> loop = parseLoop();
+    optional<Loop*> loop;
+    try
+    {
+        loop = parseLoop();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(loop)
     {
         operation->addLoop(*loop);
-        cout << "Przeparsowano operację - pętlę\n";
         return operation;
     }
-    optional<Variable*> variable = parseVariable();
+    optional<Variable*> variable;
+    try
+    {
+        variable = parseVariable();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(variable)
     {
         if(token.type == INCREMENTAL_OPERATOR || token.type == DECREMENTAL_OPERATOR)
@@ -63,7 +92,15 @@ optional<Operation*> Parser::parseOperation()
         }
         else
         {
-            optional<Assigment*> assigment = parseAssigment();
+            optional<Assigment*> assigment;
+            try
+            {
+                assigment = parseAssigment();
+            }
+            catch(AnalizeError e)
+            {
+                throw e;
+            }
             if(assigment)
             {
                 operation->addAssigment(*variable, *assigment);
@@ -88,11 +125,18 @@ optional<Operation*> Parser::parseOperation()
             );
         }
         token = lexer->getNextToken();
-        cout << "Przeparsowano przypisanie/post inkrementację\n";
         return operation;
     }
     
-    optional<Initiation*> initioation = parseInitiation();
+    optional<Initiation*> initioation;
+    try
+    {
+        initioation = parseInitiation();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(initioation)
     {
         operation->addInitiation(*initioation);
@@ -106,11 +150,18 @@ optional<Operation*> Parser::parseOperation()
             );
         }
         token = lexer->getNextToken();
-        cout << "Przeparsowano inicjacę\n";
         return operation;
     }
 
-    optional<PreIncrementation*> preIncrementation = parsePreIncrementation();
+    optional<PreIncrementation*> preIncrementation;
+    try
+    {
+        preIncrementation = parsePreIncrementation();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(preIncrementation)
     {
         operation->addPreIncrementation(*preIncrementation);
@@ -123,7 +174,6 @@ optional<Operation*> Parser::parseOperation()
                 token
             );
         }
-        cout << "przeparsowano operację - preinkrementację\n";
         return operation;
     }
 
@@ -140,7 +190,6 @@ optional<Loop*> Parser::parseLoop()
     Loop* loop = new Loop();
     if( !(token.type == KEY_WORD && std::get<std::string>(token.value) == "for") )
     {    
-        cout << "ERROR oczekiwano 'for'\n";
         return {};
     }
     token = lexer->getNextToken();
@@ -154,10 +203,26 @@ optional<Loop*> Parser::parseLoop()
         );
     }
     token = lexer->getNextToken();
-    optional<Initiation*> initiation = parseInitiation();
+    optional<Initiation*> initiation;
+    try
+    {
+        initiation = parseInitiation();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if( !initiation )
     {
-        optional<Variable*> variable = parseVariable();
+        optional<Variable*> variable;
+        try
+        {
+            variable = parseVariable();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
         if( ! variable )
         {
             if( token.type != SEMICOLON )
@@ -172,7 +237,15 @@ optional<Loop*> Parser::parseLoop()
         }
         else
         {
-            optional<Assigment*> assigment = parseAssigment();
+            optional<Assigment*> assigment;
+            try
+            {
+                assigment = parseAssigment();
+            }
+            catch(AnalizeError e)
+            {
+                throw e;
+            }
             if( !assigment )
             {
                 throw createError(
@@ -204,7 +277,16 @@ optional<Loop*> Parser::parseLoop()
     }
     token = lexer->getNextToken();
 
-    optional<Condition*> condition = parseCondition();
+    optional<Condition*> condition;
+    try
+    {
+        condition = parseCondition();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
+    
     if( !condition )
     {
         if( token.type != SEMICOLON )
@@ -229,10 +311,26 @@ optional<Loop*> Parser::parseLoop()
     }
     token = lexer->getNextToken();
 
-    optional<PreIncrementation*> preIncrementation = parsePreIncrementation();
+    optional<PreIncrementation*> preIncrementation;
+    try
+    {
+        preIncrementation = parsePreIncrementation();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(!preIncrementation)
     {
-        optional<Variable*> variable = parseVariable();
+        optional<Variable*> variable;
+        try
+        {
+            variable = parseVariable();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
         if(!variable)
         {
             if( token.type != CLOSING_ROUND_BRACKET )
@@ -254,7 +352,15 @@ optional<Loop*> Parser::parseLoop()
             }
             else
             {
-                optional<Assigment*> assigment = parseAssigment();
+                optional<Assigment*> assigment;
+                try
+                {
+                    assigment = parseAssigment();
+                }
+                catch(AnalizeError e)
+                {
+                    throw e;
+                }
                 if(!assigment)
                 {
                     throw createError(
@@ -301,7 +407,14 @@ optional<Loop*> Parser::parseLoop()
     //pobieranie operacji
     while(token.type != CLOSING_BLOCK_BRACKET && token.type != END_OF_FILE)
     {
-        operation = parseOperation();
+        try
+        {
+            operation = parseOperation();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
         if(operation)
         {
             loop->addOperation(*operation);
@@ -327,7 +440,6 @@ optional<Loop*> Parser::parseLoop()
     }
     token = lexer->getNextToken();
     //return loop;
-    cout << "Przeparsowano pętlę\n";
     return loop;
 }
 
@@ -336,7 +448,6 @@ optional<Variable*> Parser::parseVariable()
     Variable* variable = new Variable();
     if( token.type != IDENTYFIER )
     {
-        cout << "ERRoR oczekiwano identyfiaktora\n";
         return {};
     }
     variable->addVariableName(token);
@@ -346,7 +457,15 @@ optional<Variable*> Parser::parseVariable()
     if(token.type == OPENING_SQUARE_BRACKET)
     {
         token = lexer->getNextToken();
-        optional<ArithmeticExpression*> arithmeticExpression = parseArithmeticExpression();
+        optional<ArithmeticExpression*> arithmeticExpression;
+        try
+        {
+            arithmeticExpression = parseArithmeticExpression();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
         if( !arithmeticExpression )
         {
             throw createError(
@@ -358,12 +477,10 @@ optional<Variable*> Parser::parseVariable()
         }
         else
         {
-            cout << token.type << "\n";
             if(token.type == CLOSING_SQUARE_BRACKET)
             {
                 variable->addIndex(*arithmeticExpression);
                 token = lexer->getNextToken();
-                cout << "Przeparsowano tablicę\n";
                 return variable;
             }
             else
@@ -379,7 +496,6 @@ optional<Variable*> Parser::parseVariable()
     }
     else
     {
-        cout << "Przeparsowano zmienną\n";
         return variable;
     }
     
@@ -390,12 +506,19 @@ optional<Assigment*> Parser::parseAssigment()
     Assigment* assigment = new Assigment();
     if( token.type != ASSIGMENT_OPERATOR )
     {
-        cout << "ERROR oczekiwano znaku równa się\n";
         return {};
     }
 
     token = lexer->getNextToken();
-    optional<ArithmeticExpression*> arithmeticExpression = parseArithmeticExpression();
+    optional<ArithmeticExpression*> arithmeticExpression;
+    try
+    {
+        arithmeticExpression = parseArithmeticExpression();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if( !arithmeticExpression )
     {
         throw createError(
@@ -406,7 +529,6 @@ optional<Assigment*> Parser::parseAssigment()
         );
     }
     assigment->addArithmeticExpression(*arithmeticExpression);
-    cout << "Przeparsowano przypisanie\n";
     return assigment;
 }
 
@@ -415,13 +537,20 @@ optional<Initiation*> Parser::parseInitiation()
     Initiation* initiation = new Initiation();
     if(token.type != DATA_TYPE)
     {
-        cout << "ERROR oczekiwoano typu danych\n";
         return {};
     }
     initiation->addDataType(token);
     token = lexer->getNextToken();
 
-    optional<Variable*> variable = parseVariable();
+    optional<Variable*> variable;
+    try
+    {
+        variable = parseVariable();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if( !variable )
     {
         throw createError(
@@ -433,13 +562,19 @@ optional<Initiation*> Parser::parseInitiation()
     }
     initiation->addVariable(*variable);
 
-    optional<Assigment*> assigment = parseAssigment();
+    optional<Assigment*> assigment;
+    try
+    {
+        assigment = parseAssigment();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(assigment)
     {
-        cout << token.type << "\n";
         initiation->addAssigment(*assigment);
     }
-    cout << "Przeparsowano inicjację\n" << token.type << "\n";
     return initiation;
 }
 
@@ -448,13 +583,20 @@ optional<PreIncrementation*> Parser::parsePreIncrementation()
     PreIncrementation* preIncrementation = new PreIncrementation();
     if( token.type != INCREMENTAL_OPERATOR && token.type != DECREMENTAL_OPERATOR )
     {
-        cout << "ERROR oczekiwano operatora inkrementacji\n";
         return {};
     }
     preIncrementation->addToken(token);
     token = lexer->getNextToken();
 
-    optional<Variable*> variable = parseVariable();
+    optional<Variable*> variable;
+    try
+    {
+        variable = parseVariable();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(!variable)
     {
         throw createError(
@@ -466,17 +608,24 @@ optional<PreIncrementation*> Parser::parsePreIncrementation()
         throw "oczekiwano nazwy zmiennej";
     }
     preIncrementation->addVariable(*variable);
-    cout << "Przeparsowano preinkrementację\n";
     return preIncrementation;
 }
 
 optional<Condition*> Parser::parseCondition()
 {
     Condition* condition = new Condition();
-    optional<ArithmeticExpression*> arithmeticExpression = parseArithmeticExpression();
+    optional<ArithmeticExpression*> arithmeticExpression;
+    try
+    {
+        arithmeticExpression = parseArithmeticExpression();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
+    
     if(!arithmeticExpression)
     {
-        cout << "ERROR oczekiwano wyrażenia arytmetycznego\n";
         return {};
     }
     condition->addExpression(*arithmeticExpression);
@@ -491,7 +640,14 @@ optional<Condition*> Parser::parseCondition()
     }
     condition->addOperator(token);
     token = lexer->getNextToken();
-    arithmeticExpression = parseArithmeticExpression();
+    try
+    {
+        arithmeticExpression = parseArithmeticExpression();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
     if(!arithmeticExpression)
     {
         throw createError(
@@ -502,17 +658,24 @@ optional<Condition*> Parser::parseCondition()
         );
     }
     condition->addExpression(*arithmeticExpression);
-    cout << "Przeparsowano warunek\n";
     return condition;
 }
 
 optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
 {
     ArithmeticExpression* arithmeticExpression = new ArithmeticExpression();
-    optional<PrimaryExpression*> primaryExpression = parsePrimaryExpression();
+    optional<PrimaryExpression*> primaryExpression;
+    try
+    {
+        primaryExpression = parsePrimaryExpression();
+    }
+    catch(AnalizeError e)
+    {
+        throw e;
+    }
+    
     if(!primaryExpression)
     {
-        cout << "ERROR oczekiwano primary expression\n";
         return {};
     }
     arithmeticExpression->addPrimaryExpression(*primaryExpression);
@@ -520,7 +683,16 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
     {
         arithmeticExpression->addOperator(token);
         token = lexer->getNextToken();
-        primaryExpression = parsePrimaryExpression();
+        try
+        {
+            primaryExpression = parsePrimaryExpression();
+        }
+        catch(AnalizeError e)
+        {
+            throw e;
+        }
+        
+
         if(!primaryExpression)
         {
 
@@ -533,20 +705,26 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
         }
         arithmeticExpression->addPrimaryExpression(*primaryExpression);
     }
-    cout << "Przeparsowano wyrażenie arytmetyczne\n";
     return arithmeticExpression;
 }
 
 optional<PrimaryExpression*> Parser::parsePrimaryExpression()
 {
     PrimaryExpression* primaryExpression = new PrimaryExpression();
-    optional<Variable*> variable = parseVariable();
+    optional<Variable*> variable;
+    try
+    {
+        variable = parseVariable();
+    }
+    catch(AnalizeError e)   
+    {
+        throw e;
+    }    
     if(variable)
     {
         primaryExpression->addVariable(*variable);
         if(token.type == INCREMENTAL_OPERATOR || token.type == DECREMENTAL_OPERATOR)
         {
-            cout << "Primary expression - inkrementacja\n";
             primaryExpression->addIncrementOperator(token);
             token = lexer->getNextToken();
             return primaryExpression;
@@ -554,22 +732,27 @@ optional<PrimaryExpression*> Parser::parsePrimaryExpression()
     }
     else if(token.type == NUMBER)
     {
-        cout << "Primary expression - numer\n";
         primaryExpression->addNumber(token);
         token = lexer->getNextToken();
         return primaryExpression;
     }
     else
     {
-        optional<PreIncrementation*> preIncrementation = parsePreIncrementation();
+        optional<PreIncrementation*> preIncrementation;
+        try
+        {
+            preIncrementation = parsePreIncrementation();
+        }
+        catch(AnalizeError e)   
+        {
+            throw e;
+        }
         if(!preIncrementation)
         {
-            cout << "ERROR oczekiwano zmiennej, numeru lub inkrementacji\n";
             return {};
         }
         primaryExpression->addPreIncrementation(*preIncrementation);
     }
-    cout << "Przeparsowano podstawowe wyrażenie\n";
     return primaryExpression;
 }
 
@@ -585,4 +768,11 @@ AnalizeError Parser::createError(ErrorType type, string message, string codePart
         token.position_in_line
     };
     return error;
+}
+
+void Parser::writeError(AnalizeError error)
+{
+    cout << "PARSER ERROR: line " + to_string(error.line) + 
+    "; sign " + to_string(error.signNumber) + "\n";
+    cout << error.message << "\n";
 }

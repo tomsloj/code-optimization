@@ -20,6 +20,7 @@ class Parser
         Token token;
 
         AnalizeError createError(ErrorType type, string message, string codePart, Token token);
+        void writeError(AnalizeError e);
     public:
         Parser(std::string path, bool isFile = false);
         ~Parser();
