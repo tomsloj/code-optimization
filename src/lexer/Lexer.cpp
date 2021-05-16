@@ -36,43 +36,82 @@ Token Lexer::getNextToken()
     {
         token = buildIdentyfier();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
-
+        }
         token = buildNumber();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildAssigmentAndEquality();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildOperations();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildLogicalOperator();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildRoundBracket();
         if(checkToken(token))
+       {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildBlockBracket();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildSquareBracket();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildSemicolon();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
 
         token = buildEOF();
         if(checkToken(token))
+        {
+            token->line_number = place.first;
+            token->position_in_line = place.second;
             return *token;
+        }
     }
     catch(AnalizeError e)
     {
@@ -104,6 +143,9 @@ Token Lexer::getNextToken()
         token = new Token;
         token->type = UNKNOW;
     }
+    token->line_number = place.first;
+    token->position_in_line = place.second;
+
     return *token;
 }
 
