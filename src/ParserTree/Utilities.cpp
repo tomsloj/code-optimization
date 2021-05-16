@@ -36,8 +36,15 @@ std::string primaryExpressionToString(PrimaryExpression* primaryExpression)
         }
         case 2:
         {
-
-            return to_string(get<unsigned long long>(get<Token>(primaryExpression->getPExpression()).value));
+            if(get<Token>(primaryExpression->getPExpression()).value.index() == 0)
+                return to_string(get<unsigned long long>(get<Token>(primaryExpression->getPExpression()).value));
+            else
+            {
+                string s = to_string(get<double>(get<Token>(primaryExpression->getPExpression()).value));
+                while(s[s.size() - 1] == '0')
+                    s = s.substr(0, s.size()-1);
+                return s;
+            }
             break;
         }
         case 3:

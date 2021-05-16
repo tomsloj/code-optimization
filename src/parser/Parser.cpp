@@ -109,7 +109,7 @@ optional<Operation*> Parser::parseOperation()
             {
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
-                    "expected inkrementation or assigment",
+                    "expected operation",
                     "",
                     token
                 );
@@ -773,6 +773,6 @@ AnalizeError Parser::createError(ErrorType type, string message, string codePart
 void Parser::writeError(AnalizeError error)
 {
     cout << "PARSER ERROR: line " + to_string(error.line) + 
-    "; sign " + to_string(error.signNumber) + "\n";
+    "; sign " + to_string(error.signNumber - 1) + "\n";
     cout << error.message << "\n";
 }

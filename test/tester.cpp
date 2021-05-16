@@ -394,4 +394,16 @@ BOOST_AUTO_TEST_CASE( parse_loop_in_loop_string )
     BOOST_CHECK_EQUAL(source, newSource);
 }
 
+BOOST_AUTO_TEST_CASE( parse_complex_tree_string )
+{
+    string source = "for(int a[3278+ds*ad[21/33]]=0;a<14;++a){for(b[1+0]=asd-2131.3;www==vff[a[b[c]]];){int c[10+10+10+19+20+fad]=++a*3-++b-++s;}}";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
