@@ -46,8 +46,10 @@ class PreIncrementation;
 class Operation;
 class PrimaryExpression
 {
-    public:
+    private: 
         variant<Variable*, pair<Variable*, Token>, Token, PreIncrementation*> pExpression;
+    public:
+        variant<Variable*, pair<Variable*, Token>, Token, PreIncrementation*> getPExpression() { return pExpression; }
         void addVariable(Variable* variable)
         {
             pExpression = variable;
@@ -69,9 +71,12 @@ class PrimaryExpression
 
 class Variable
 {
-    public:
+    private:
         Token variableName;
         ArithmeticExpression* index;
+    public:
+        Token getVariableName() { return variableName; }
+        ArithmeticExpression* getIndex() { return index; }
         void addVariableName(Token& token)
         {
             variableName = token;
@@ -86,10 +91,10 @@ class Variable
 class ArithmeticExpression
 {
     public:
-        vector<PrimaryExpression>primaryExpressions;
+        vector<PrimaryExpression*>primaryExpressions;
         vector<Token> operators;
 
-        void addPrimaryExpression(PrimaryExpression& primaryExpression)
+        void addPrimaryExpression(PrimaryExpression* primaryExpression)
         {
             primaryExpressions.push_back(primaryExpression);
         }
@@ -101,9 +106,12 @@ class ArithmeticExpression
 
 class PreIncrementation
 {
-    public:
+    private:
         Token incrementation;
         Variable* variable;
+    public:
+        Token getIncrementation() { return incrementation; };
+        Variable* getVariable() { return variable; };
 
         void addToken(Token& token)
         {
@@ -117,8 +125,10 @@ class PreIncrementation
 
 class Assigment
 {
-    public:
+    private:
         ArithmeticExpression* arithmeticExpression;
+    public:
+        ArithmeticExpression* getArithmeticExpression() { return arithmeticExpression; }
         void addArithmeticExpression(ArithmeticExpression* arithmeticExpression)
         {
             this->arithmeticExpression = arithmeticExpression;
@@ -128,10 +138,12 @@ class Assigment
 
 class Condition
 {
-    public:
-        vector<ArithmeticExpression>expressions;
+    private:
         Token logicalOperator;
-        void addExpression(ArithmeticExpression& arithmeticExpression)
+    public:
+        vector<ArithmeticExpression*>expressions;
+        Token getLogicalOperator() { return logicalOperator; }
+        void addExpression(ArithmeticExpression* arithmeticExpression)
         {
             expressions.push_back(arithmeticExpression);
         }
@@ -143,10 +155,14 @@ class Condition
 
 class Initiation
 {
-    public:
+    private:
         Token dataType;
         Variable* variable;
         Assigment* assigment;
+    public:
+        Token getDataType() { return dataType; }
+        Variable* getVariable() { return variable; }
+        Assigment* getAssigment() { return assigment; }
         void addDataType(Token& token)
         {
             dataType = token;
@@ -163,18 +179,30 @@ class Initiation
 
 class Loop
 {
-    public:
+    private:
         variant<Initiation*, pair<Variable*, Assigment*> >initiation;
+        bool boolInitiation = false;
         Condition* condition;
         variant<PreIncrementation*, pair<Variable*, Assigment*>, pair<Variable*, Token> >update;
-        vector<Operation>operations;
+        bool boolUpdate = false;
+    public:
+        variant<Initiation*, pair<Variable*, Assigment*> >getInitiation() { return initiation; }
+        Condition* getCondition() { return condition; };
+        variant<PreIncrementation*, pair<Variable*, Assigment*>, pair<Variable*, Token> > getUpdate() { return update; };
+
+        bool isInitiation() { return boolInitiation; }
+        bool isBoolUpdate() { return boolUpdate; }
+
+        vector<Operation*>operations;
 
         void addInitAssigment(Variable* variable, Assigment* assigment)
         {
+            boolInitiation = true;
             initiation = std::make_pair(variable, assigment);
         }
         void addInitiation(Initiation* initiation)
         {
+            boolInitiation = true;
             this->initiation = initiation;
         }
         void addCondition(Condition* condition)
@@ -183,17 +211,20 @@ class Loop
         }
         void addPostIncrementation(Variable* variable, Token token)
         {
+            boolUpdate = true;
             update = std::make_pair(variable, token);
         }
         void addUpdateAssigment(Variable* variable, Assigment* assigment)
         {
+            boolUpdate = true;
             update = std::make_pair(variable, assigment);
         }
         void addPreIncrementation(PreIncrementation* preIncrementation)
         {
+            boolUpdate = true;
             update = preIncrementation;
         }
-        void addOperation(Operation& operation)
+        void addOperation(Operation* operation)
         {
             operations.push_back(operation);
         }
@@ -201,8 +232,13 @@ class Loop
 
 class Operation
 {
-    public:
+    private:
         variant<Loop*, pair<Variable*, Assigment*>, pair<Variable*, Token>, Initiation*, PreIncrementation*> oper;
+    public:
+        variant<Loop*, pair<Variable*, Assigment*>, pair<Variable*, Token>, Initiation*, PreIncrementation*> getOper()
+        {
+            return oper;
+        }
         
         void addLoop(Loop* loop)
         {
@@ -229,9 +265,9 @@ class Operation
 class Program
 {
     public:
-        std::vector<Operation>operations;
+        std::vector<Operation*>operations;
 
-        void addOperation(Operation &oper)
+        void addOperation(Operation* oper)
         {
             operations.push_back(oper);
         }
@@ -240,13 +276,16 @@ class Program
 class ParserTree
 {
     private:
-        
-    public:
         Program program;
+    public:
         ParserTree(Program root)
         {
             program = root;
         };
+        Program getProgram()
+        {
+            return program;
+        }
 
 };
 

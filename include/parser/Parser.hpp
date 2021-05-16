@@ -25,16 +25,18 @@ class Parser
         ~Parser();
 
         optional<ParserTree> parse();
-        optional<Program> parseProgram();
-        optional<Operation> parseOperation();
-        optional<Loop> parseLoop();
-        optional<Variable> parseVariable();
-        optional<Assigment> parseAssigment();
-        optional<Initiation> parseInitiation();
-        optional<PreIncrementation> parsePreIncrementation();
-        optional<Condition> parseCondition();
-        optional<ArithmeticExpression> parseArithmeticExpression();
-        optional<PrimaryExpression> parsePrimaryExpression();
+        optional<Program*> parseProgram();
+        optional<Operation*> parseOperation();
+        optional<Loop*> parseLoop();
+        optional<Variable*> parseVariable();
+        optional<Assigment*> parseAssigment();
+        optional<Initiation*> parseInitiation();
+        optional<PreIncrementation*> parsePreIncrementation();
+        optional<Condition*> parseCondition();
+        optional<ArithmeticExpression*> parseArithmeticExpression();
+        optional<PrimaryExpression*> parsePrimaryExpression();
+
+        
 
 };
 

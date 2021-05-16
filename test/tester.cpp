@@ -13,6 +13,9 @@
 #include "../include/parser/Parser.hpp"
 #include "../src/parser/Parser.cpp"
 
+#include "../include/ParserTree/Utilities.hpp"
+#include "../src/ParserTree/Utilities.cpp"
+
 
 using namespace std;
 
@@ -297,43 +300,98 @@ BOOST_AUTO_TEST_SUITE_END()
  */
 BOOST_AUTO_TEST_SUITE( parserTest )
 
-BOOST_AUTO_TEST_CASE( parse_variable )
+BOOST_AUTO_TEST_CASE( parse_number_assigment )
 {
     string source = "dsas = 9;";
     Parser parser(source);
 
     optional<ParserTree> tree = parser.parse();
     BOOST_CHECK(tree);
-    Program program = (*tree).program;
+    Program program = (*tree).getProgram();
     BOOST_CHECK_EQUAL(program.operations.size(), 1);
-    Operation operation = program.operations[0];
-    BOOST_CHECK_EQUAL(operation.oper.index(), 1);
-    pair<Variable*, Assigment*> p = std::get<pair<Variable*, Assigment*>>(operation.oper);
+    Operation* operation = program.operations[0];
+    BOOST_CHECK_EQUAL(operation->getOper().index(), 1);
+    pair<Variable*, Assigment*> p = std::get<pair<Variable*, Assigment*>>(operation->getOper());
     Variable var = *p.first;
-    // Assigment ass = *p.second;
-    // BOOST_CHECK_EQUAL(std::get<string>(var.variableName.value), "dsas");
-    // BOOST_CHECK_EQUAL((*ass.arithmeticExpression).primaryExpressions.size(), 1);
-    // BOOST_CHECK_EQUAL((*ass.arithmeticExpression).operators.size(), 0);
-    // PrimaryExpression pe = (*ass.arithmeticExpression).primaryExpressions[0];
-    // BOOST_CHECK_EQUAL(pe.pExpression.index(), 0);
-    // var = *get<Variable*>(pe.pExpression);
-    // BOOST_CHECK_EQUAL(std::get<int>(var.variableName.value), 9);
-
+    Assigment ass = *p.second;
+    BOOST_CHECK_EQUAL(std::get<string>(var.getVariableName().value), "dsas");
+    BOOST_CHECK_EQUAL((*ass.getArithmeticExpression()).primaryExpressions.size(), 1);
+    BOOST_CHECK_EQUAL((*ass.getArithmeticExpression()).operators.size(), 0);
+    PrimaryExpression* pe = (*ass.getArithmeticExpression()).primaryExpressions[0];
+    BOOST_CHECK_EQUAL(pe->getPExpression().index(), 2);
+    Token t = get<Token>(pe->getPExpression());
+    BOOST_CHECK_EQUAL(std::get<unsigned long long>(t.value), 9);
 }
 
-// BOOST_AUTO_TEST_CASE( parse_table )
-// {
-//     string source = "dsas[21];";
-//     Parser parser(source);
-//     BOOST_CHECK_EQUAL(parser.parse(), true);
-// }
+BOOST_AUTO_TEST_CASE( parse_variable_assigment )
+{
+    string source = "dsas = var;";
+    Parser parser(source);
 
-// BOOST_AUTO_TEST_CASE( parse_table_with_arithmetic_expression )
-// {
-//     string source = "dsas[21+43*fasd];";
-//     Parser parser(source);
-//     BOOST_CHECK_EQUAL(parser.parse(), true);
-// }
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    Program program = (*tree).getProgram();
+    BOOST_CHECK_EQUAL(program.operations.size(), 1);
+    Operation* operation = program.operations[0];
+    BOOST_CHECK_EQUAL(operation->getOper().index(), 1);
+    pair<Variable*, Assigment*> p = std::get<pair<Variable*, Assigment*>>(operation->getOper());
+    Variable var = *p.first;
+    Assigment ass = *p.second;
+    BOOST_CHECK_EQUAL(std::get<string>(var.getVariableName().value), "dsas");
+    BOOST_CHECK_EQUAL((*ass.getArithmeticExpression()).primaryExpressions.size(), 1);
+    BOOST_CHECK_EQUAL((*ass.getArithmeticExpression()).operators.size(), 0);
+    PrimaryExpression* pe = (*ass.getArithmeticExpression()).primaryExpressions[0];
+    BOOST_CHECK_EQUAL(pe->getPExpression().index(), 0);
+    var = *get<Variable*>(pe->getPExpression());
+    BOOST_CHECK_EQUAL(std::get<string>(var.getVariableName().value), "var");
+}
 
+BOOST_AUTO_TEST_CASE( parse_variable_assigment_string )
+{
+    string source = "dsas=var;";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_CASE( parse_array_assigment_string )
+{
+    string source = "dsas[48]=var[sa+5];";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_CASE( parse_table_string )
+{
+    string source = "for(int a=0;a<14;++a){int c[10]=a*3;}";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_CASE( parse_loop_in_loop_string )
+{
+    string source = "for(int a=0;a<14;++a){for(b[10]=asd;www==vff;){int c[10]=++a*3;}}";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
