@@ -41,10 +41,11 @@ optional<Program*> Parser::parseProgram()
         optional<Operation*> operation;
         try
         {
-            operation = parseOperation();
+            operation = parseOperation(program);
         }
         catch(AnalizeError e)
         {
+            delete program;
             throw e;
         }
         if(operation)
@@ -52,21 +53,26 @@ optional<Program*> Parser::parseProgram()
             program->addOperation(*operation);
         }
         else
+        {
+            delete program;
             return {};
+        }
     }
     return program;
 }
 
-optional<Operation*> Parser::parseOperation()
+optional<Operation*> Parser::parseOperation(Node* parent)
 {
     Operation* operation = new Operation();
+    operation->setParent(parent);
     optional<Loop*> loop;
     try
     {
-        loop = parseLoop();
+        loop = parseLoop(operation);
     }
     catch(AnalizeError e)
     {
+        delete operation;
         throw e;
     }
     if(loop)
@@ -77,10 +83,11 @@ optional<Operation*> Parser::parseOperation()
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable();
+        variable = parseVariable(operation);
     }
     catch(AnalizeError e)
     {
+        delete operation;
         throw e;
     }
     if(variable)
@@ -95,10 +102,11 @@ optional<Operation*> Parser::parseOperation()
             optional<Assigment*> assigment;
             try
             {
-                assigment = parseAssigment();
+                assigment = parseAssigment(operation);
             }
             catch(AnalizeError e)
             {
+                delete operation;
                 throw e;
             }
             if(assigment)
@@ -107,6 +115,7 @@ optional<Operation*> Parser::parseOperation()
             }
             else
             {
+                delete operation;
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
                     "expected operation",
@@ -117,6 +126,7 @@ optional<Operation*> Parser::parseOperation()
         }
         if(token.type != SEMICOLON)
         {
+            delete operation;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected semicolon after operation",
@@ -131,10 +141,11 @@ optional<Operation*> Parser::parseOperation()
     optional<Initiation*> initioation;
     try
     {
-        initioation = parseInitiation();
+        initioation = parseInitiation(operation);
     }
     catch(AnalizeError e)
     {
+        delete operation;
         throw e;
     }
     if(initioation)
@@ -142,6 +153,7 @@ optional<Operation*> Parser::parseOperation()
         operation->addInitiation(*initioation);
         if(token.type != SEMICOLON)
         {
+            delete operation;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected semicolon after operation",
@@ -156,10 +168,11 @@ optional<Operation*> Parser::parseOperation()
     optional<PreIncrementation*> preIncrementation;
     try
     {
-        preIncrementation = parsePreIncrementation();
+        preIncrementation = parsePreIncrementation(operation);
     }
     catch(AnalizeError e)
     {
+        delete operation;
         throw e;
     }
     if(preIncrementation)
@@ -167,6 +180,7 @@ optional<Operation*> Parser::parseOperation()
         operation->addPreIncrementation(*preIncrementation);
         if(token.type != SEMICOLON)
         {
+            delete operation;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected semicolon after operation",
@@ -182,19 +196,23 @@ optional<Operation*> Parser::parseOperation()
         token = lexer->getNextToken();
         return operation;
     }
+    delete operation;
     return {};
 }
 
-optional<Loop*> Parser::parseLoop()
+optional<Loop*> Parser::parseLoop(Node* parent)
 {
     Loop* loop = new Loop();
+    loop->setParent(parent);
     if( !(token.type == KEY_WORD && std::get<std::string>(token.value) == "for") )
     {    
+        delete loop;
         return {};
     }
     token = lexer->getNextToken();
     if( token.type != OPENING_ROUND_BRACKET )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected ( in for loop",
@@ -206,10 +224,11 @@ optional<Loop*> Parser::parseLoop()
     optional<Initiation*> initiation;
     try
     {
-        initiation = parseInitiation();
+        initiation = parseInitiation(loop);
     }
     catch(AnalizeError e)
     {
+        delete loop;
         throw e;
     }
     if( !initiation )
@@ -217,16 +236,18 @@ optional<Loop*> Parser::parseLoop()
         optional<Variable*> variable;
         try
         {
-            variable = parseVariable();
+            variable = parseVariable(loop);
         }
         catch(AnalizeError e)
         {
+            delete loop;
             throw e;
         }
         if( ! variable )
         {
             if( token.type != SEMICOLON )
             {
+                delete loop;
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
                     "expected initiation",
@@ -240,14 +261,16 @@ optional<Loop*> Parser::parseLoop()
             optional<Assigment*> assigment;
             try
             {
-                assigment = parseAssigment();
+                assigment = parseAssigment(loop);
             }
             catch(AnalizeError e)
             {
+                delete loop;
                 throw e;
             }
             if( !assigment )
             {
+                delete loop;
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
                     "expected assigment after variable",
@@ -268,6 +291,7 @@ optional<Loop*> Parser::parseLoop()
 
     if( token.type != SEMICOLON )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected semicolon",
@@ -280,10 +304,11 @@ optional<Loop*> Parser::parseLoop()
     optional<Condition*> condition;
     try
     {
-        condition = parseCondition();
+        condition = parseCondition(loop);
     }
     catch(AnalizeError e)
     {
+        delete loop;
         throw e;
     }
     
@@ -291,6 +316,7 @@ optional<Loop*> Parser::parseLoop()
     {
         if( token.type != SEMICOLON )
         {
+            delete loop;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected condition",
@@ -302,6 +328,7 @@ optional<Loop*> Parser::parseLoop()
     loop->addCondition(*condition);
     if( token.type != SEMICOLON )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected semicolon",
@@ -314,10 +341,11 @@ optional<Loop*> Parser::parseLoop()
     optional<PreIncrementation*> preIncrementation;
     try
     {
-        preIncrementation = parsePreIncrementation();
+        preIncrementation = parsePreIncrementation(loop);
     }
     catch(AnalizeError e)
     {
+        delete loop;
         throw e;
     }
     if(!preIncrementation)
@@ -325,16 +353,18 @@ optional<Loop*> Parser::parseLoop()
         optional<Variable*> variable;
         try
         {
-            variable = parseVariable();
+            variable = parseVariable(loop);
         }
         catch(AnalizeError e)
         {
+            delete loop;
             throw e;
         }
         if(!variable)
         {
             if( token.type != CLOSING_ROUND_BRACKET )
             {
+                delete loop;
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
                     "expected update of variable",
@@ -355,14 +385,16 @@ optional<Loop*> Parser::parseLoop()
                 optional<Assigment*> assigment;
                 try
                 {
-                    assigment = parseAssigment();
+                    assigment = parseAssigment(loop);
                 }
                 catch(AnalizeError e)
                 {
+                    delete loop;
                     throw e;
                 }
                 if(!assigment)
                 {
+                    delete loop;
                     throw createError(
                         EXPECTED_EXPRESSION_AFTER_OPERATOR,
                         "expected update of variable",
@@ -383,6 +415,7 @@ optional<Loop*> Parser::parseLoop()
     }
     if( token.type != CLOSING_ROUND_BRACKET )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected )",
@@ -394,6 +427,7 @@ optional<Loop*> Parser::parseLoop()
 
     if( token.type != OPENING_BLOCK_BRACKET )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected { at the begining of block of code",
@@ -409,10 +443,11 @@ optional<Loop*> Parser::parseLoop()
     {
         try
         {
-            operation = parseOperation();
+            operation = parseOperation(loop);
         }
         catch(AnalizeError e)
         {
+            delete loop;
             throw e;
         }
         if(operation)
@@ -421,6 +456,7 @@ optional<Loop*> Parser::parseLoop()
         }
         else
         {
+            delete loop;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected statement",
@@ -431,6 +467,7 @@ optional<Loop*> Parser::parseLoop()
     }
     if( !token.type == CLOSING_BLOCK_BRACKET )
     {
+        delete loop;
         throw createError(
             EXPECTED_EXPRESSION_AFTER_OPERATOR,
             "expected } at and of block",
@@ -439,15 +476,16 @@ optional<Loop*> Parser::parseLoop()
         );
     }
     token = lexer->getNextToken();
-    //return loop;
     return loop;
 }
 
-optional<Variable*> Parser::parseVariable()
+optional<Variable*> Parser::parseVariable(Node* parent)
 {
     Variable* variable = new Variable();
+    variable->setParent(parent);
     if( token.type != IDENTYFIER )
     {
+        delete variable;
         return {};
     }
     variable->addVariableName(token);
@@ -460,14 +498,16 @@ optional<Variable*> Parser::parseVariable()
         optional<ArithmeticExpression*> arithmeticExpression;
         try
         {
-            arithmeticExpression = parseArithmeticExpression();
+            arithmeticExpression = parseArithmeticExpression(variable);
         }
         catch(AnalizeError e)
         {
+            delete variable;
             throw e;
         }
         if( !arithmeticExpression )
         {
+            delete variable;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected index of array",
@@ -485,6 +525,7 @@ optional<Variable*> Parser::parseVariable()
             }
             else
             {
+                delete variable;
                 throw createError(
                     EXPECTED_EXPRESSION_AFTER_OPERATOR,
                     "expected ]",
@@ -501,11 +542,13 @@ optional<Variable*> Parser::parseVariable()
     
 }
 
-optional<Assigment*> Parser::parseAssigment()
+optional<Assigment*> Parser::parseAssigment(Node* parent)
 {
     Assigment* assigment = new Assigment();
+    assigment->setParent(parent);
     if( token.type != ASSIGMENT_OPERATOR )
     {
+        delete assigment;
         return {};
     }
 
@@ -513,14 +556,16 @@ optional<Assigment*> Parser::parseAssigment()
     optional<ArithmeticExpression*> arithmeticExpression;
     try
     {
-        arithmeticExpression = parseArithmeticExpression();
+        arithmeticExpression = parseArithmeticExpression(assigment);
     }
     catch(AnalizeError e)
     {
+        delete assigment;
         throw e;
     }
     if( !arithmeticExpression )
     {
+        delete assigment;
         throw createError(
         EXPECTED_EXPRESSION_AFTER_OPERATOR,
         "expected expression after assign operator",
@@ -532,11 +577,13 @@ optional<Assigment*> Parser::parseAssigment()
     return assigment;
 }
 
-optional<Initiation*> Parser::parseInitiation()
+optional<Initiation*> Parser::parseInitiation(Node* parent)
 {
     Initiation* initiation = new Initiation();
+    initiation->setParent(parent);
     if(token.type != DATA_TYPE)
     {
+        delete initiation;
         return {};
     }
     initiation->addDataType(token);
@@ -545,14 +592,16 @@ optional<Initiation*> Parser::parseInitiation()
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable();
+        variable = parseVariable(initiation);
     }
     catch(AnalizeError e)
     {
+        delete initiation;
         throw e;
     }
     if( !variable )
     {
+        delete initiation;
         throw createError(
         EXPECTED_EXPRESSION_AFTER_OPERATOR,
         "expected variable in initiation",
@@ -565,10 +614,11 @@ optional<Initiation*> Parser::parseInitiation()
     optional<Assigment*> assigment;
     try
     {
-        assigment = parseAssigment();
+        assigment = parseAssigment(initiation);
     }
     catch(AnalizeError e)
     {
+        delete initiation;
         throw e;
     }
     if(assigment)
@@ -578,11 +628,13 @@ optional<Initiation*> Parser::parseInitiation()
     return initiation;
 }
 
-optional<PreIncrementation*> Parser::parsePreIncrementation()
+optional<PreIncrementation*> Parser::parsePreIncrementation(Node* parent)
 {
     PreIncrementation* preIncrementation = new PreIncrementation();
+    preIncrementation->setParent(parent);
     if( token.type != INCREMENTAL_OPERATOR && token.type != DECREMENTAL_OPERATOR )
     {
+        delete preIncrementation;
         return {};
     }
     preIncrementation->addToken(token);
@@ -591,46 +643,51 @@ optional<PreIncrementation*> Parser::parsePreIncrementation()
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable();
+        variable = parseVariable(preIncrementation);
     }
     catch(AnalizeError e)
     {
+        delete preIncrementation;
         throw e;
     }
     if(!variable)
     {
+        delete preIncrementation;
         throw createError(
         EXPECTED_EXPRESSION_AFTER_OPERATOR,
         "expected variable in preincrementation",
         "",
         token
         );
-        throw "oczekiwano nazwy zmiennej";
     }
     preIncrementation->addVariable(*variable);
     return preIncrementation;
 }
 
-optional<Condition*> Parser::parseCondition()
+optional<Condition*> Parser::parseCondition(Node* parent)
 {
     Condition* condition = new Condition();
+    condition->setParent(parent);
     optional<ArithmeticExpression*> arithmeticExpression;
     try
     {
-        arithmeticExpression = parseArithmeticExpression();
+        arithmeticExpression = parseArithmeticExpression(condition);
     }
     catch(AnalizeError e)
     {
+        delete condition;
         throw e;
     }
     
     if(!arithmeticExpression)
     {
+        delete condition;
         return {};
     }
     condition->addExpression(*arithmeticExpression);
     if( token.type != RELATIONAL_OPERATOR )
     {
+        delete condition;
         throw createError(
         EXPECTED_EXPRESSION_AFTER_OPERATOR,
         "expected logical operator in condition",
@@ -642,14 +699,16 @@ optional<Condition*> Parser::parseCondition()
     token = lexer->getNextToken();
     try
     {
-        arithmeticExpression = parseArithmeticExpression();
+        arithmeticExpression = parseArithmeticExpression(condition);
     }
     catch(AnalizeError e)
     {
+        delete condition;
         throw e;
     }
     if(!arithmeticExpression)
     {
+        delete condition;
         throw createError(
         EXPECTED_EXPRESSION_AFTER_OPERATOR,
         "expected arithmetic expression after logical operator",
@@ -661,21 +720,24 @@ optional<Condition*> Parser::parseCondition()
     return condition;
 }
 
-optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
+optional<ArithmeticExpression*> Parser::parseArithmeticExpression(Node* parent)
 {
     ArithmeticExpression* arithmeticExpression = new ArithmeticExpression();
+    arithmeticExpression->setParent(parent);
     optional<PrimaryExpression*> primaryExpression;
     try
     {
-        primaryExpression = parsePrimaryExpression();
+        primaryExpression = parsePrimaryExpression(arithmeticExpression);
     }
     catch(AnalizeError e)
     {
+        delete arithmeticExpression;
         throw e;
     }
     
     if(!primaryExpression)
     {
+        delete arithmeticExpression;
         return {};
     }
     arithmeticExpression->addPrimaryExpression(*primaryExpression);
@@ -685,17 +747,18 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
         token = lexer->getNextToken();
         try
         {
-            primaryExpression = parsePrimaryExpression();
+            primaryExpression = parsePrimaryExpression(arithmeticExpression);
         }
         catch(AnalizeError e)
         {
+            delete arithmeticExpression;
             throw e;
         }
         
 
         if(!primaryExpression)
         {
-
+            delete arithmeticExpression;
             throw createError(
                 EXPECTED_EXPRESSION_AFTER_OPERATOR,
                 "expected expression after operator",
@@ -708,16 +771,18 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
     return arithmeticExpression;
 }
 
-optional<PrimaryExpression*> Parser::parsePrimaryExpression()
+optional<PrimaryExpression*> Parser::parsePrimaryExpression(Node* parent)
 {
     PrimaryExpression* primaryExpression = new PrimaryExpression();
+    primaryExpression->setParent(parent);
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable();
+        variable = parseVariable(primaryExpression);
     }
     catch(AnalizeError e)   
     {
+        delete primaryExpression;
         throw e;
     }    
     if(variable)
@@ -741,14 +806,16 @@ optional<PrimaryExpression*> Parser::parsePrimaryExpression()
         optional<PreIncrementation*> preIncrementation;
         try
         {
-            preIncrementation = parsePreIncrementation();
+            preIncrementation = parsePreIncrementation(primaryExpression);
         }
         catch(AnalizeError e)   
         {
+            delete primaryExpression;
             throw e;
         }
         if(!preIncrementation)
         {
+            delete primaryExpression;
             return {};
         }
         primaryExpression->addPreIncrementation(*preIncrementation);

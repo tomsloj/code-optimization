@@ -300,6 +300,14 @@ BOOST_AUTO_TEST_SUITE_END()
  */
 BOOST_AUTO_TEST_SUITE( parserTest )
 
+BOOST_AUTO_TEST_CASE( parse_check_throw )
+{
+    string source = "dsas=var";
+    Parser parser(source);
+
+    BOOST_CHECK(!parser.parse());
+}
+
 BOOST_AUTO_TEST_CASE( parse_number_assigment )
 {
     string source = "dsas = 9;";

@@ -9,32 +9,32 @@
 
 using namespace std;
 
-// enum TypeOfNode {VAR, PROGRAM};
-
-// class Node
-// {
-//     private:
-//         std::weak_ptr<Node> parent;
+class Node
+{
+    private:
+        Node* parent;
         
-//     public:
-//         enum class Type
-//         {
-//             Program,
-//             Operation,
-//             Loop,
-//             Initiation,
-//             Assigment,
-//             Condition,
-//             ArithmeticExpression,
-//             MulitplicativeExpression,
-//             PrimaryExpression,
-//             PreIncrementation,
-//             Variable,
-//             Number,
-//         };
+    public:
+        void setParent(Node* paernt)
+        { 
+            this->parent = parent;
+        }
+        enum class Type
+        {
+            Program,
+            Operation,
+            Loop,
+            Initiation,
+            Assigment,
+            Condition,
+            ArithmeticExpression,
+            PrimaryExpression,
+            PreIncrementation,
+            Variable,
+        };
 
-//         virtual TypeOfNode getType() = 0;
-// };
+        virtual Type getType() = 0;
+};
 
 #include "../structures/Token.hpp"
 
@@ -44,7 +44,7 @@ class Variable;
 class ArithmeticExpression;
 class PreIncrementation;
 class Operation;
-class PrimaryExpression
+class PrimaryExpression : public Node
 {
     private: 
         variant<Variable*, pair<Variable*, Token>, Token, PreIncrementation*> pExpression;
@@ -67,9 +67,10 @@ class PrimaryExpression
         {
             pExpression = preIncrementation;
         }
+        virtual Type getType(){ return Node::Type::PrimaryExpression;}
 };
 
-class Variable
+class Variable : public Node
 {
     private:
         Token variableName;
@@ -85,10 +86,10 @@ class Variable
         {
             index = arithmeticExpression;
         }
-
+        virtual Type getType(){ return Node::Type::Variable;}
 };
 
-class ArithmeticExpression
+class ArithmeticExpression : public Node
 {
     public:
         vector<PrimaryExpression*>primaryExpressions;
@@ -102,9 +103,10 @@ class ArithmeticExpression
         {
             operators.push_back(token);
         }
+        virtual Type getType(){ return Node::Type::ArithmeticExpression;}
 };
 
-class PreIncrementation
+class PreIncrementation : public Node
 {
     private:
         Token incrementation;
@@ -121,9 +123,10 @@ class PreIncrementation
         {
             this->variable = variable;
         }
+        virtual Type getType(){ return Node::Type::PreIncrementation;}
 };
 
-class Assigment
+class Assigment : public Node
 {
     private:
         ArithmeticExpression* arithmeticExpression;
@@ -133,10 +136,10 @@ class Assigment
         {
             this->arithmeticExpression = arithmeticExpression;
         }
-
+        virtual Type getType(){ return Node::Type::Assigment;}
 };
 
-class Condition
+class Condition : public Node
 {
     private:
         Token logicalOperator;
@@ -151,9 +154,10 @@ class Condition
         {
             logicalOperator = token;
         }
+        virtual Type getType(){ return Node::Type::Condition;}
 };
 
-class Initiation
+class Initiation : public Node
 {
     private:
         Token dataType;
@@ -175,9 +179,10 @@ class Initiation
         {
             this->assigment = assigment;
         }
+        virtual Type getType(){ return Node::Type::Initiation;}
 };
 
-class Loop
+class Loop : public Node
 {
     private:
         variant<Initiation*, pair<Variable*, Assigment*> >initiation;
@@ -228,9 +233,10 @@ class Loop
         {
             operations.push_back(operation);
         }
+        virtual Type getType(){ return Node::Type::Loop;}
 };
 
-class Operation
+class Operation : public Node
 {
     private:
         variant<Loop*, pair<Variable*, Assigment*>, pair<Variable*, Token>, Initiation*, PreIncrementation*> oper;
@@ -260,9 +266,10 @@ class Operation
         {
             oper = preIncrementation;
         }
+        virtual Type getType(){ return Node::Type::Operation;}
 };
 
-class Program
+class Program : public Node
 {
     public:
         std::vector<Operation*>operations;
@@ -271,6 +278,7 @@ class Program
         {
             operations.push_back(oper);
         }
+        virtual Type getType(){ return Node::Type::Program;}
 };
 
 class ParserTree
