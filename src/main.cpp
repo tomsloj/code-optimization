@@ -2,6 +2,7 @@
 
 #include <variant>
 #include <string>
+#include <optional>
 
 // #include "../include/lexer/Lexer.hpp"
 #include "../include/parser/Parser.hpp"
@@ -17,8 +18,9 @@ int main(int argc, char *argv[])
     else if(argc == 2)
     {
         Parser parser(argv[1], true);
-        ParserTree tree = *parser.parse();
-        cout << treeToString(tree);
+        optional<ParserTree> tree = parser.parse();
+        if( tree )
+            cout << treeToString(*tree);
 
         // Lexer lexer(argv[1], true);
         // auto x = lexer.getNextToken();

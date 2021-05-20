@@ -188,6 +188,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
                 token
             );
         }
+        token = lexer->getNextToken();
         return operation;
     }
 
@@ -197,7 +198,12 @@ optional<Operation*> Parser::parseOperation(Node* parent)
         return operation;
     }
     delete operation;
-    return {};
+    throw createError(
+        EXPECTED_EXPRESSION_AFTER_OPERATOR,
+        "unknown statement",
+        "",
+        token
+    );
 }
 
 optional<Loop*> Parser::parseLoop(Node* parent)
@@ -439,7 +445,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
 
     optional<Operation*> operation;
     //pobieranie operacji
-    while(token.type != CLOSING_BLOCK_BRACKET && token.type != END_OF_FILE)
+    while(token.type != CLOSING_BLOCK_BRACKET)
     {
         try
         {

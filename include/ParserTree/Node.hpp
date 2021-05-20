@@ -162,10 +162,12 @@ class Initiation : public Node
     private:
         Token dataType;
         Variable* variable;
+        bool assigmentFlag = false;
         Assigment* assigment;
     public:
         Token getDataType() { return dataType; }
         Variable* getVariable() { return variable; }
+        bool hasAssigment() { return assigmentFlag; }
         Assigment* getAssigment() { return assigment; }
         void addDataType(Token& token)
         {
@@ -177,6 +179,7 @@ class Initiation : public Node
         }
         void addAssigment(Assigment* assigment)
         {
+            assigmentFlag = true;
             this->assigment = assigment;
         }
         virtual Type getType(){ return Node::Type::Initiation;}
@@ -239,8 +242,10 @@ class Loop : public Node
 class Operation : public Node
 {
     private:
+        bool empty = true;
         variant<Loop*, pair<Variable*, Assigment*>, pair<Variable*, Token>, Initiation*, PreIncrementation*> oper;
     public:
+        bool isEmpty(){ return empty; };
         variant<Loop*, pair<Variable*, Assigment*>, pair<Variable*, Token>, Initiation*, PreIncrementation*> getOper()
         {
             return oper;
@@ -248,22 +253,27 @@ class Operation : public Node
         
         void addLoop(Loop* loop)
         {
+            empty = false;
             oper = loop;
         }
         void addPostIncrementation(Variable* variable, Token& token)
         {
+            empty = false;
            oper = std::make_pair(variable, token);
         }
         void addAssigment(Variable* variable, Assigment* assigment)
         {
+            empty = false;
             oper = std::make_pair(variable, assigment);
         }
         void addInitiation(Initiation* initiation)
         {
+            empty = false;
             oper = initiation;
         }
         void addPreIncrementation(PreIncrementation* preIncrementation)
         {
+            empty = false;
             oper = preIncrementation;
         }
         virtual Type getType(){ return Node::Type::Operation;}

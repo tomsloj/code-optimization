@@ -414,4 +414,41 @@ BOOST_AUTO_TEST_CASE( parse_complex_tree_string )
     BOOST_CHECK_EQUAL(source, newSource);
 }
 
+BOOST_AUTO_TEST_CASE( parse_initiation_without_assigment_string )
+{
+    string source = "int a;int b;a=20;b=a/a;";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_CASE( parse_incrementations_string )
+{
+    string source = "int a;++a;a++;c=a;";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_CASE( parse_decrementations_string )
+{
+    string source = "int a;--a;a--;c=a;";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+
 BOOST_AUTO_TEST_SUITE_END()

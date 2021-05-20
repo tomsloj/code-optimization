@@ -90,7 +90,8 @@ std::string initiationToString(Initiation* initiation)
     s += get<string>(initiation->getDataType().value);
     s += " ";
     s += variableToString(initiation->getVariable());
-    s += assigmentToString(initiation->getAssigment());
+    if( initiation->hasAssigment())
+        s += assigmentToString(initiation->getAssigment());
     return s;
 }
 
@@ -115,6 +116,10 @@ std::string variableToString(Variable* variable)
 
 std::string operationToString(Operation* oper)
 {
+    if( oper->isEmpty() )
+    {
+        return ";";
+    }
     switch(oper->getOper().index())
     {
         case 0:
