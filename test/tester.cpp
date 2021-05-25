@@ -16,6 +16,9 @@
 #include "../include/ParserTree/Utilities.hpp"
 #include "../src/ParserTree/Utilities.cpp"
 
+#include "../include/analyzer/Analyzer.hpp"
+#include "../src/analyzer/Analyzer.cpp"
+
 
 using namespace std;
 
@@ -300,9 +303,41 @@ BOOST_AUTO_TEST_SUITE_END()
  */
 BOOST_AUTO_TEST_SUITE( parserTest )
 
-BOOST_AUTO_TEST_CASE( parse_check_throw )
+BOOST_AUTO_TEST_CASE( parse_check_throw_missing_semicolon )
 {
     string source = "dsas=var";
+    Parser parser(source);
+
+    BOOST_CHECK(!parser.parse());
+}
+
+BOOST_AUTO_TEST_CASE( parse_check_throw_unknown_operation )
+{
+    string source = "-a";
+    Parser parser(source);
+
+    BOOST_CHECK(!parser.parse());
+}
+
+BOOST_AUTO_TEST_CASE( parse_check_throw_for_bad_initiation )
+{
+    string source = "for(a;a < 0; ++a)";
+    Parser parser(source);
+
+    BOOST_CHECK(!parser.parse());
+}
+
+BOOST_AUTO_TEST_CASE( parse_check_throw_missing_condition )
+{
+    string source = "for(int a = 0;; ++a)";
+    Parser parser(source);
+
+    BOOST_CHECK(!parser.parse());
+}
+
+BOOST_AUTO_TEST_CASE( parse_check_throw_bad_update )
+{
+    string source = "for(int a = 0;a < 10; a)";
     Parser parser(source);
 
     BOOST_CHECK(!parser.parse());
@@ -450,5 +485,184 @@ BOOST_AUTO_TEST_CASE( parse_decrementations_string )
     BOOST_CHECK_EQUAL(source, newSource);
 }
 
+BOOST_AUTO_TEST_CASE( parse_table_initiation_string )
+{
+    string source = "int tab[5/2];";
+    Parser parser(source);
+
+    optional<ParserTree> tree = parser.parse();
+    BOOST_CHECK(tree);
+    ParserTree t = *tree;
+    string newSource = treeToString(t);
+    BOOST_CHECK_EQUAL(source, newSource);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+/**
+ * analyzer tests
+ */
+BOOST_AUTO_TEST_SUITE( analyzerTest )
+
+BOOST_AUTO_TEST_CASE( analyzer_parser_error )
+{
+    string source = "dsas=var";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_assign_undefined_error )
+{
+    string source = "dsas=5;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_correct_initiation_variable )
+{
+    string source = "int dsas=5;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_correct_initiation_table )
+{
+    string source = "int dsas[5/2];";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_table_initiation_error )
+{
+    string source = "int x[10] = 1;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_correct_initiation_table_with_variable_index )
+{
+    string source = "int s = 0;int dsas[s];";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_second_definition_error )
+{
+    string source = "int s;int s;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_second_definition_table_and_varaible_error )
+{
+    string source = "int s;int s[10];";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_second_definition_varaible_and_table_error )
+{
+    string source = "int s[10];int s;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_increment_table_without_index_error )
+{
+    string source = "int s[10];++s;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_increment_table )
+{
+    string source = "int s[10];++s[8];";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_simple_for )
+{
+    string source = "for(int i = 0; i < 10; ++i){int a = 0;}";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_local_variable )
+{
+    string source = "int a = 1; for(int i = 0; i < 10; ++i){int a = 0;}";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_local_table_with_the_same_name )
+{
+    string source = "int a = 1; for(int i = 0; i < 10; ++i){int a[10];}";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_same_name_of_counter_and_variable_name )
+{
+    string source = "for(int a = 0; a < 10; ++a){int a = 1;}";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_table_use_counter )
+{
+    string source = "for(int a = 0; a < 10; ++a){int b = a;}";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_removing_level )
+{
+    string source = "for(int a = 0; a < 10; ++a){int b = a;}int a = 0;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_removing_level_error )
+{
+    string source = "for(int a = 0; a < 10; ++a){int b = a;}int b = a;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_different_levels_in_loop )
+{
+    string source = "int a;for(int a = 0; a < 10; ++a){int b = a;}int b = a;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_duplicate_initiation_after_loop_error )
+{
+    string source = "int a;for(int a = 0; a < 10; ++a){int b = a;}int a = 0;";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -21,6 +21,7 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT)
 	@mkdir -p $(BUILDDIR)/structures
 	@mkdir -p $(BUILDDIR)/parser
 	@mkdir -p $(BUILDDIR)/ParserTree
+	@mkdir -p $(BUILDDIR)/analyzer
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
 
 clean:
