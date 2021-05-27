@@ -9,13 +9,22 @@
 
 using namespace std;
 
+#include "../structures/Token.hpp"
+
+class Variable;
+class ArithmeticExpression;
+class PreIncrementation;
+class Operation;
+class Loop;
+class Program;
+
 class Node
 {
     private:
-        Node* parent;
+        variant<Loop*, Program*> parent;
         
     public:
-        void setParent(Node* paernt)
+        void setParent(variant<Loop*, Program*> paernt)
         { 
             this->parent = parent;
         }
@@ -36,14 +45,6 @@ class Node
         virtual Type getType() = 0;
 };
 
-#include "../structures/Token.hpp"
-
-// #include "Variable.hpp"
-// #include "Program.hpp"
-class Variable;
-class ArithmeticExpression;
-class PreIncrementation;
-class Operation;
 class PrimaryExpression : public Node
 {
     private: 
@@ -300,9 +301,9 @@ class ParserTree
         {
             program = root;
         };
-        Program getProgram()
+        Program* getProgram()
         {
-            return program;
+            return &program;
         }
 
 };

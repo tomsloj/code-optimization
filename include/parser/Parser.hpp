@@ -23,15 +23,15 @@ class Parser
         void writeError(AnalizeError e);
     
         optional<Program*> parseProgram();
-        optional<Operation*> parseOperation(Node* parent);
-        optional<Loop*> parseLoop(Node* parent);
-        optional<Variable*> parseVariable(Node* parent);
-        optional<Assigment*> parseAssigment(Node* parent);
-        optional<Initiation*> parseInitiation(Node* parent);
-        optional<PreIncrementation*> parsePreIncrementation(Node* parent);
-        optional<Condition*> parseCondition(Node* parent);
-        optional<ArithmeticExpression*> parseArithmeticExpression(Node* parent);
-        optional<PrimaryExpression*> parsePrimaryExpression(Node* parent);
+        optional<Operation*> parseOperation(variant<Loop*, Program*> parent);
+        optional<Loop*> parseLoop(variant<Loop*, Program*> parent);
+        optional<Variable*> parseVariable();
+        optional<Assigment*> parseAssigment();
+        optional<Initiation*> parseInitiation();
+        optional<PreIncrementation*> parsePreIncrementation();
+        optional<Condition*> parseCondition();
+        optional<ArithmeticExpression*> parseArithmeticExpression();
+        optional<PrimaryExpression*> parsePrimaryExpression();
     public:
         Parser(std::string path, bool isFile = false);
         ~Parser();

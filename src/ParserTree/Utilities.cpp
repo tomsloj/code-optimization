@@ -251,6 +251,6 @@ std::string programToString(Program* program)
 
 std::string treeToString(ParserTree tree)
 {
-    Program p = tree.getProgram();
+    Program p = *tree.getProgram();
     return programToString(&p);
 }

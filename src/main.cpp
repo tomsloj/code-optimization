@@ -6,7 +6,8 @@
 
 // #include "../include/lexer/Lexer.hpp"
 // #include "../include/parser/Parser.hpp"
-#include "../include/analyzer/Analyzer.hpp"
+// #include "../include/analyzer/Analyzer.hpp"
+#include "../include/optimizer/Optimizer.hpp"
 #include "../include/ParserTree/Utilities.hpp"
 
 
@@ -18,9 +19,13 @@ int main(int argc, char *argv[])
     }
     else if(argc == 2)
     {
-        Analyzer analyzer(argv[1], true);
-        cout << analyzer.analyze();
-        cout << " analyze finished\n";
+        Optimizer optimizer(argv[1], true);
+        cout << optimizer.optimize() << "\n";
+        cout << treeToString(*optimizer.getTree()) << "\n";
+
+        // Analyzer analyzer(argv[1], true);
+        // cout << analyzer.analyze();
+        // cout << " analyze finished\n";
 
         // Parser parser(argv[1], true);
         // optional<ParserTree> tree = parser.parse();

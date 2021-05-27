@@ -18,7 +18,7 @@ bool Analyzer::isMutable(ArithmeticExpression& arithmeticExpression)
 
 bool Analyzer::analyze()
 {
-    optional<ParserTree> tree = parser->parse();
+    tree = parser->parse();
     if(!tree)
         return false;
     optional<AnalizeError> error = analyzeTree(*tree);
@@ -35,7 +35,7 @@ bool Analyzer::analyze()
 
 optional<AnalizeError> Analyzer::analyzeTree(ParserTree& tree)
 {
-    Program p = tree.getProgram();
+    Program p = *tree.getProgram();
     return analyzeProgram(p);
 }
 
@@ -206,6 +206,14 @@ optional<AnalizeError> Analyzer::analyzeInitiation(Initiation& initiation, int l
     {
         return analizeError;
     }
+    if(initiation.getVariable()->getIndex())
+    {
+        analizeError = checkArithmeticExpression(*initiation.getVariable()->getIndex());
+        if(analizeError)
+        {
+            return analizeError;
+        }
+    }
     if(initiation.hasAssigment() && initiation.getVariable()->getIndex())
     {
         return createError(
@@ -306,6 +314,8 @@ optional<AnalizeError> Analyzer::checkVariable(Variable& variable)
     }
     if( varInfo.name == name && varInfo.isTable == isTable )
     {
+        if(isTable)
+            return checkArithmeticExpression(*variable.getIndex());
         return {};
     }
     string message = "Undefined variable name " + name;
@@ -377,4 +387,9 @@ void Analyzer::writeError(AnalizeError error)
     cout << "ANALYZER ERROR: line " + to_string(error.line) + 
     "; sign " + to_string(error.signNumber) + "\n";
     cout << error.message << "\n";
+}
+
+optional<ParserTree> Analyzer::getTree()
+{
+    return tree;
 }

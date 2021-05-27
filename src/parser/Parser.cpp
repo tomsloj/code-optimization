@@ -61,14 +61,14 @@ optional<Program*> Parser::parseProgram()
     return program;
 }
 
-optional<Operation*> Parser::parseOperation(Node* parent)
+optional<Operation*> Parser::parseOperation(variant<Loop*, Program*> parent)
 {
     Operation* operation = new Operation();
     operation->setParent(parent);
     optional<Loop*> loop;
     try
     {
-        loop = parseLoop(operation);
+        loop = parseLoop(parent);
     }
     catch(AnalizeError e)
     {
@@ -83,7 +83,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable(operation);
+        variable = parseVariable();
     }
     catch(AnalizeError e)
     {
@@ -102,7 +102,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
             optional<Assigment*> assigment;
             try
             {
-                assigment = parseAssigment(operation);
+                assigment = parseAssigment();
             }
             catch(AnalizeError e)
             {
@@ -141,7 +141,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
     optional<Initiation*> initioation;
     try
     {
-        initioation = parseInitiation(operation);
+        initioation = parseInitiation();
     }
     catch(AnalizeError e)
     {
@@ -168,7 +168,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
     optional<PreIncrementation*> preIncrementation;
     try
     {
-        preIncrementation = parsePreIncrementation(operation);
+        preIncrementation = parsePreIncrementation();
     }
     catch(AnalizeError e)
     {
@@ -206,7 +206,7 @@ optional<Operation*> Parser::parseOperation(Node* parent)
     );
 }
 
-optional<Loop*> Parser::parseLoop(Node* parent)
+optional<Loop*> Parser::parseLoop(variant<Loop*, Program*> parent)
 {
     Loop* loop = new Loop();
     loop->setParent(parent);
@@ -230,7 +230,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
     optional<Initiation*> initiation;
     try
     {
-        initiation = parseInitiation(loop);
+        initiation = parseInitiation();
     }
     catch(AnalizeError e)
     {
@@ -242,7 +242,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
         optional<Variable*> variable;
         try
         {
-            variable = parseVariable(loop);
+            variable = parseVariable();
         }
         catch(AnalizeError e)
         {
@@ -267,7 +267,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
             optional<Assigment*> assigment;
             try
             {
-                assigment = parseAssigment(loop);
+                assigment = parseAssigment();
             }
             catch(AnalizeError e)
             {
@@ -310,7 +310,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
     optional<Condition*> condition;
     try
     {
-        condition = parseCondition(loop);
+        condition = parseCondition();
     }
     catch(AnalizeError e)
     {
@@ -347,7 +347,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
     optional<PreIncrementation*> preIncrementation;
     try
     {
-        preIncrementation = parsePreIncrementation(loop);
+        preIncrementation = parsePreIncrementation();
     }
     catch(AnalizeError e)
     {
@@ -359,7 +359,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
         optional<Variable*> variable;
         try
         {
-            variable = parseVariable(loop);
+            variable = parseVariable();
         }
         catch(AnalizeError e)
         {
@@ -391,7 +391,7 @@ optional<Loop*> Parser::parseLoop(Node* parent)
                 optional<Assigment*> assigment;
                 try
                 {
-                    assigment = parseAssigment(loop);
+                    assigment = parseAssigment();
                 }
                 catch(AnalizeError e)
                 {
@@ -485,10 +485,9 @@ optional<Loop*> Parser::parseLoop(Node* parent)
     return loop;
 }
 
-optional<Variable*> Parser::parseVariable(Node* parent)
+optional<Variable*> Parser::parseVariable()
 {
     Variable* variable = new Variable();
-    variable->setParent(parent);
     if( token.type != IDENTYFIER )
     {
         delete variable;
@@ -504,7 +503,7 @@ optional<Variable*> Parser::parseVariable(Node* parent)
         optional<ArithmeticExpression*> arithmeticExpression;
         try
         {
-            arithmeticExpression = parseArithmeticExpression(variable);
+            arithmeticExpression = parseArithmeticExpression();
         }
         catch(AnalizeError e)
         {
@@ -548,10 +547,9 @@ optional<Variable*> Parser::parseVariable(Node* parent)
     
 }
 
-optional<Assigment*> Parser::parseAssigment(Node* parent)
+optional<Assigment*> Parser::parseAssigment()
 {
     Assigment* assigment = new Assigment();
-    assigment->setParent(parent);
     if( token.type != ASSIGMENT_OPERATOR )
     {
         delete assigment;
@@ -562,7 +560,7 @@ optional<Assigment*> Parser::parseAssigment(Node* parent)
     optional<ArithmeticExpression*> arithmeticExpression;
     try
     {
-        arithmeticExpression = parseArithmeticExpression(assigment);
+        arithmeticExpression = parseArithmeticExpression();
     }
     catch(AnalizeError e)
     {
@@ -583,10 +581,9 @@ optional<Assigment*> Parser::parseAssigment(Node* parent)
     return assigment;
 }
 
-optional<Initiation*> Parser::parseInitiation(Node* parent)
+optional<Initiation*> Parser::parseInitiation()
 {
     Initiation* initiation = new Initiation();
-    initiation->setParent(parent);
     if(token.type != DATA_TYPE)
     {
         delete initiation;
@@ -598,7 +595,7 @@ optional<Initiation*> Parser::parseInitiation(Node* parent)
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable(initiation);
+        variable = parseVariable();
     }
     catch(AnalizeError e)
     {
@@ -620,7 +617,7 @@ optional<Initiation*> Parser::parseInitiation(Node* parent)
     optional<Assigment*> assigment;
     try
     {
-        assigment = parseAssigment(initiation);
+        assigment = parseAssigment();
     }
     catch(AnalizeError e)
     {
@@ -634,10 +631,9 @@ optional<Initiation*> Parser::parseInitiation(Node* parent)
     return initiation;
 }
 
-optional<PreIncrementation*> Parser::parsePreIncrementation(Node* parent)
+optional<PreIncrementation*> Parser::parsePreIncrementation()
 {
     PreIncrementation* preIncrementation = new PreIncrementation();
-    preIncrementation->setParent(parent);
     if( token.type != INCREMENTAL_OPERATOR && token.type != DECREMENTAL_OPERATOR )
     {
         delete preIncrementation;
@@ -649,7 +645,7 @@ optional<PreIncrementation*> Parser::parsePreIncrementation(Node* parent)
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable(preIncrementation);
+        variable = parseVariable();
     }
     catch(AnalizeError e)
     {
@@ -670,14 +666,13 @@ optional<PreIncrementation*> Parser::parsePreIncrementation(Node* parent)
     return preIncrementation;
 }
 
-optional<Condition*> Parser::parseCondition(Node* parent)
+optional<Condition*> Parser::parseCondition()
 {
     Condition* condition = new Condition();
-    condition->setParent(parent);
     optional<ArithmeticExpression*> arithmeticExpression;
     try
     {
-        arithmeticExpression = parseArithmeticExpression(condition);
+        arithmeticExpression = parseArithmeticExpression();
     }
     catch(AnalizeError e)
     {
@@ -705,7 +700,7 @@ optional<Condition*> Parser::parseCondition(Node* parent)
     token = lexer->getNextToken();
     try
     {
-        arithmeticExpression = parseArithmeticExpression(condition);
+        arithmeticExpression = parseArithmeticExpression();
     }
     catch(AnalizeError e)
     {
@@ -726,14 +721,13 @@ optional<Condition*> Parser::parseCondition(Node* parent)
     return condition;
 }
 
-optional<ArithmeticExpression*> Parser::parseArithmeticExpression(Node* parent)
+optional<ArithmeticExpression*> Parser::parseArithmeticExpression()
 {
     ArithmeticExpression* arithmeticExpression = new ArithmeticExpression();
-    arithmeticExpression->setParent(parent);
     optional<PrimaryExpression*> primaryExpression;
     try
     {
-        primaryExpression = parsePrimaryExpression(arithmeticExpression);
+        primaryExpression = parsePrimaryExpression();
     }
     catch(AnalizeError e)
     {
@@ -753,7 +747,7 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression(Node* parent)
         token = lexer->getNextToken();
         try
         {
-            primaryExpression = parsePrimaryExpression(arithmeticExpression);
+            primaryExpression = parsePrimaryExpression();
         }
         catch(AnalizeError e)
         {
@@ -777,14 +771,13 @@ optional<ArithmeticExpression*> Parser::parseArithmeticExpression(Node* parent)
     return arithmeticExpression;
 }
 
-optional<PrimaryExpression*> Parser::parsePrimaryExpression(Node* parent)
+optional<PrimaryExpression*> Parser::parsePrimaryExpression()
 {
     PrimaryExpression* primaryExpression = new PrimaryExpression();
-    primaryExpression->setParent(parent);
     optional<Variable*> variable;
     try
     {
-        variable = parseVariable(primaryExpression);
+        variable = parseVariable();
     }
     catch(AnalizeError e)   
     {
@@ -812,7 +805,7 @@ optional<PrimaryExpression*> Parser::parsePrimaryExpression(Node* parent)
         optional<PreIncrementation*> preIncrementation;
         try
         {
-            preIncrementation = parsePreIncrementation(primaryExpression);
+            preIncrementation = parsePreIncrementation();
         }
         catch(AnalizeError e)   
         {

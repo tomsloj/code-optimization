@@ -19,8 +19,9 @@ class Analyzer
 {
     private:
         Parser* parser;
-
         std::vector<struct VarInfo>varMap;
+
+        optional<ParserTree> tree;
 
         optional<AnalizeError> analyzeTree(ParserTree& tree);
         optional<AnalizeError> analyzeProgram(Program& program);
@@ -48,12 +49,7 @@ class Analyzer
         Analyzer(string path, bool isFile = false);
         ~Analyzer();
         bool analyze();
-
-        
-
+        optional<ParserTree> getTree();
 };
-
-
-
 
 #endif

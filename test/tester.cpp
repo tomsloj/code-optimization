@@ -19,6 +19,9 @@
 #include "../include/analyzer/Analyzer.hpp"
 #include "../src/analyzer/Analyzer.cpp"
 
+#include "../include/optimizer/Optimizer.hpp"
+#include "../src/optimizer/Optimizer.cpp"
+
 
 using namespace std;
 
@@ -350,7 +353,7 @@ BOOST_AUTO_TEST_CASE( parse_number_assigment )
 
     optional<ParserTree> tree = parser.parse();
     BOOST_CHECK(tree);
-    Program program = (*tree).getProgram();
+    Program program = *tree->getProgram();
     BOOST_CHECK_EQUAL(program.operations.size(), 1);
     Operation* operation = program.operations[0];
     BOOST_CHECK_EQUAL(operation->getOper().index(), 1);
@@ -373,7 +376,7 @@ BOOST_AUTO_TEST_CASE( parse_variable_assigment )
 
     optional<ParserTree> tree = parser.parse();
     BOOST_CHECK(tree);
-    Program program = (*tree).getProgram();
+    Program program = *tree->getProgram();
     BOOST_CHECK_EQUAL(program.operations.size(), 1);
     Operation* operation = program.operations[0];
     BOOST_CHECK_EQUAL(operation->getOper().index(), 1);
@@ -663,6 +666,62 @@ BOOST_AUTO_TEST_CASE( analyzer_duplicate_initiation_after_loop_error )
     Analyzer analyzer(source);
 
     BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_CASE( analyzer_inititaion_of_array_with_doesnt_existing_varaible_error )
+{
+    string source = "int a[10 * b];";
+    Analyzer analyzer(source);
+
+    BOOST_CHECK(!analyzer.analyze());
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+
+/**
+ * optimizer tests
+ */
+BOOST_AUTO_TEST_SUITE(optimizerTest )
+
+BOOST_AUTO_TEST_CASE( optimizer_simple_assigment_optimalization )
+{
+    string source = "int a;for(int b=0;b<10;++b){a=5;}";
+    string optimized = "int a;a=5;for(int b=0;b<10;++b){}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_two_level_assigment_optimalization )
+{
+    string source = "int a;for(int b=0;b<10;++b){for(int b=0;b<20;++b){a=5;}}";
+    string optimized = "int a;a=5;for(int b=0;b<10;++b){for(int b=0;b<20;++b){}}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_assigment_cannot_do_optimalization )
+{
+    string source = "int a;for(int b=0;b<10;++b){for(int b=0;b<a;++b){a=5;}}";
+    string optimized = "int a;for(int b=0;b<10;++b){for(int b=0;b<a;++b){a=5;}}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_assigment_part_move_optimalization )
+{
+    string source = "int a;for(int b=0;b<a;++b){for(int b=0;b<15;++b){a=5;}}";
+    string optimized = "int a;for(int b=0;b<a;++b){a=5;for(int b=0;b<15;++b){}}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
