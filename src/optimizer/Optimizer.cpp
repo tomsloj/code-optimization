@@ -41,10 +41,22 @@ void Optimizer::optimizeTree(ParserTree* tree)
 
 void Optimizer::optimizeProgram(Program& program)
 {
+    multiset<string> usedNames;
+    multiset<string> usedNamesDownLevel;
     for(int i = 0; i < program.operations.size(); ++i)
     {
         Operation* operation = program.operations[i];
-        variant< bool, vector<Operation*> > var = optimizeOperation(*operation, 0);
+        multiset<string> nextLevelUsed = getUsed(*operation);
+        for(auto name : nextLevelUsed)
+        {
+            usedNames.insert(name);
+        }
+    }
+
+    for(int i = 0; i < program.operations.size(); ++i)
+    {
+        Operation* operation = program.operations[i];
+        variant< bool, vector<Operation*> > var = optimizeOperation(*operation, 0, usedNamesDownLevel, usedNames);
         if(var.index() == 1)
         {
             vector<Operation*> vec = get< vector<Operation*> >(var);
@@ -54,7 +66,7 @@ void Optimizer::optimizeProgram(Program& program)
     }
 }
 
-variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& operation, int level)
+variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& operation, int level, multiset<string> usedNamesDownLevel, multiset<string> usedThisLevel)
 {
     switch (operation.getOper().index())
     {
@@ -66,7 +78,7 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
             {
                 var->alreadyUsed = false;
             }
-            vector<Operation*> operations = optimizeLoop(*get<Loop*>(operation.getOper()), level + 1);
+            vector<Operation*> operations = optimizeLoop(*get<Loop*>(operation.getOper()), level + 1, usedThisLevel);
             for(auto i = 0; i < varsCopy.size(); ++i)
             {
                 varsCopy[i].alreadyUsed = varsCopy[i].alreadyUsed || varMap[i].alreadyUsed;
@@ -103,7 +115,9 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
         case 3:
         {
             // inicjacja zmiennych
-            return signInitiation(*get<Initiation*>(operation.getOper()), level);
+            // auto tmp = *get<Initiation*>(operation.getOper();
+            // Variable variable = *tmp.getVariable();
+            return signInitiation(*get<Initiation*>(operation.getOper()), level, usedNamesDownLevel, usedThisLevel);
             break;
         }
         case 4:
@@ -119,23 +133,60 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
     }
 }
 
-std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level)
+std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<string> usedNamesDownLevel)
 {
+    // TODO pierwsze przejście zbierające użycia i
+    // warunek na optymalizację inicjacji jeżeli assigment jest z samych stałych
+    // oraz nazwa zmiennej nie użyta na żadnym z 2 lvl
+    multiset<string> empty1;
+    multiset<string> usedNames;
     if(loop.isInitiation())
     {
         switch(loop.getInitiation().index())
         {
             case 0:
-                signInitiation(*get<Initiation*>(loop.getInitiation()), level);
+            {
+                signInitiation(*get<Initiation*>(loop.getInitiation()), level, empty1, empty1);
+                multiset<string> tmp = getUsed(*get<Initiation*>(loop.getInitiation()));
+                for(auto name : tmp)
+                {
+                    usedNames.insert(name);
+                }
                 break;
+            }
             case 1:
                 auto initiation = get<pair<Variable*, Assigment*> >(loop.getInitiation());
                 signVariable(*initiation.first);
                 signAssigment(*initiation.second);
+                usedNames.insert(get<string>(initiation.first->getVariableName().value));
+                for(auto x : initiation.second->getArithmeticExpression()->primaryExpressions)
+                {
+                    multiset<string> tmp = getUsed(*x);
+                    for(auto name : tmp)
+                    {
+                        usedNames.insert(name);
+                    }
+                }
                 break;
         }
     }
     signCondition(*loop.getCondition());
+
+    auto expression1 = loop.getCondition()->expressions[0];
+    auto expression2 = loop.getCondition()->expressions[1];
+    for(auto pExpression : expression1->primaryExpressions)
+    {
+        multiset<string> tmp = getUsed(*pExpression);
+        for(auto name : tmp)
+            usedNames.insert(name);
+    }
+    for(auto pExpression : expression2->primaryExpressions)
+    {
+        multiset<string> tmp = getUsed(*pExpression);
+        for(auto name : tmp)
+            usedNames.insert(name);
+    }
+
     if(loop.isBoolUpdate())
     {
         auto update = loop.getUpdate();
@@ -145,6 +196,7 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level)
             {
                 PreIncrementation pre = *get<PreIncrementation*>(update);
                 signPreinkrementation(pre);
+                usedNames.insert(get<string>(pre.getVariable()->getVariableName().value));
                 break;
             }
             case 1:
@@ -152,22 +204,43 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level)
                 pair<Variable*, Assigment*> p = get<pair<Variable*, Assigment*> >(update);
                 signVariable(*p.first);
                 signAssigment(*p.second);
+                usedNames.insert(get<string>(p.first->getVariableName().value));
+                for(auto x : p.second->getArithmeticExpression()->primaryExpressions)
+                {
+                    multiset<string> tmp = getUsed(*x);
+                    for(auto name : tmp)
+                    {
+                        usedNames.insert(name);
+                    }
+                }
                 break;
             }
             case 2:
             {
                 pair<Variable*, Token> p = get<pair<Variable*, Token> > (update);
                 signVariable(*p.first);
+                usedNames.insert(get<string>(p.first->getVariableName().value));
                 break;
             }
         }
     }
-    std::vector<Operation*> operations;
     
     for(int i = 0; i < loop.operations.size(); ++i)
     {
+        Operation* operation = loop.operations[i];
+        multiset<string> nextLevelUsed = getUsed(*operation);
+        for(auto name : nextLevelUsed)
+        {
+            usedNames.insert(name);
+        }
+    }
+
+    std::vector<Operation*> operations;
+
+    for(int i = 0; i < loop.operations.size(); ++i)
+    {
         auto operation = loop.operations.begin() + i;
-        variant< bool, vector<Operation*> > vec = optimizeOperation(**operation, level + 1);
+        variant< bool, vector<Operation*> > vec = optimizeOperation(**operation, level + 1, usedNamesDownLevel, usedNames);
         if(vec.index() == 0 && get<bool>(vec))
         {
             operations.push_back(*operation);
@@ -181,7 +254,7 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level)
             vector<Operation*> otherLevelOperations = get< vector<Operation*> >(vec);
             for(auto oper = otherLevelOperations.begin(); oper != otherLevelOperations.end(); ++oper)
             {
-                variant< bool, vector<Operation*> > var = optimizeOperation(**oper, level + 1);
+                variant< bool, vector<Operation*> > var = optimizeOperation(**oper, level + 1, usedNamesDownLevel, usedNames);
                 if(var.index() == 0 && get<bool>(var))
                 {
                     operations.push_back(*oper);
@@ -205,13 +278,23 @@ void Optimizer::signCondition(Condition& condition)
     return signArithmeticExpression(*expressions[1]);
 }
 
-bool Optimizer::signInitiation(Initiation& initiation, int level)
+bool Optimizer::signInitiation(Initiation& initiation, int level,  multiset<string> usedNamesDownLevel, multiset<string> usedThisLevel)
 {
+    int varLevel = getVariableLevel(*initiation.getVariable());
     addVariable(initiation.getVariable()->getVariableName(), bool(initiation.getVariable()->getIndex()), level);
     if(initiation.hasAssigment())
-        signAssigment(*initiation.getAssigment());
-    return false;
-    // TODO sprawdzenie czy można przenieść inicjację
+        if(!signAssigment(*initiation.getAssigment()))
+            return false;
+    string name = get<string>(initiation.getVariable()->getVariableName().value);
+    auto tmp1 = usedNamesDownLevel.find(name);
+    auto tmp2 = usedThisLevel.find(name);
+    if(usedNamesDownLevel.count(name) >= 1 || usedThisLevel.count(name) > 1)
+    {
+        return false;
+    }
+    if(level <= varLevel + 2)
+        return false;
+    return true;
 }
 
 bool Optimizer::signAssigment(Assigment& assigment)
@@ -370,7 +453,7 @@ int Optimizer::getVariableLevel(Variable& variable)
         -1,
         false
     }; 
-    vector<struct VarDetails>::iterator it;
+    vector<struct VarDetails>::iterator it = varMap.end();
     for(auto var = varMap.begin(); var != varMap.end(); ++var)
     {
         if(var->name == name)
@@ -382,6 +465,8 @@ int Optimizer::getVariableLevel(Variable& variable)
             }
         }
     }
+    if(it == varMap.end())
+        return -2;
     return it->level;
 }
 
@@ -406,3 +491,104 @@ void Optimizer::writeError(AnalizeError error)
     cout << error.message << "\n";
 }
 
+multiset<string> Optimizer::getUsed(Operation& operation)
+{
+    multiset<string> usedNames;
+    switch (operation.getOper().index())
+    {
+        case 0:
+        {
+            // pętla
+            break;
+        }
+        case 1:
+        {
+            // przypisanie
+            auto p = get<pair<Variable*, Assigment*> >(operation.getOper());
+            usedNames.insert(get<string>(p.first->getVariableName().value));
+            for(auto x : p.second->getArithmeticExpression()->primaryExpressions)
+            {
+                multiset<string> tmp = getUsed(*x);
+                for(auto name : tmp)
+                {
+                    usedNames.insert(name);
+                }
+            }
+            break;
+        }
+        case 2:
+        {
+            // post inkrementacja/dekrementacja
+            auto p = get<pair<Variable*, Token> >(operation.getOper());
+            usedNames.insert(get<string>(p.first->getVariableName().value));
+            break;
+        }
+        case 3:
+        {
+            // inicjacja zmiennych
+            Initiation* initiation = get<Initiation*>(operation.getOper());
+            return getUsed(*initiation);
+            break;
+        }
+        case 4:
+        {
+            // preinkrementacja
+            usedNames.insert(get<string>(get<PreIncrementation*>(operation.getOper())->getVariable()->getVariableName().value));
+            break;
+        }
+    }
+    return usedNames;
+}
+
+std::multiset<string> Optimizer::getUsed(PrimaryExpression& primaryExpression)
+{
+    multiset<string> name;
+    switch(primaryExpression.getPExpression().index())
+    {
+        case 0:
+        {
+            // variable
+            Variable* variable = get<Variable*>(primaryExpression.getPExpression());
+            name.insert(get<string>(variable->getVariableName().value));
+            break;
+        }
+        case 1:
+        {
+            // post inkrementacja/dekrementacja
+            auto p = get<pair<Variable*, Token> >(primaryExpression.getPExpression());
+            name.insert(get<string>(p.first->getVariableName().value));
+            break;
+        }
+        case 2:
+        {
+            // stala (numer)
+            break;
+        }
+        case 3:
+        {
+            // preinkrementacja/dekrementacja
+            PreIncrementation* preIncrementation = get<PreIncrementation*>(primaryExpression.getPExpression());
+            name.insert(get<string>(preIncrementation->getVariable()->getVariableName().value));
+            break;
+        }
+    }
+    return name;
+}
+
+multiset<string> Optimizer::getUsed(Initiation& initiation)
+{
+    multiset<string>usedNames;
+    usedNames.insert(get<string>(initiation.getVariable()->getVariableName().value));
+    if(initiation.hasAssigment())
+    {
+        for(auto x : initiation.getAssigment()->getArithmeticExpression()->primaryExpressions)
+        {
+            multiset<string> tmp = getUsed(*x);
+            for(auto name : tmp)
+            {
+                usedNames.insert(name);
+            }
+        }
+    }
+    return usedNames;
+}
