@@ -683,7 +683,12 @@ optional<Condition*> Parser::parseCondition()
     if(!arithmeticExpression)
     {
         delete condition;
-        return {};
+        throw createError(
+        EXPECTED_EXPRESSION_AFTER_OPERATOR,
+        "expected condition",
+        "",
+        token
+        );
     }
     condition->addExpression(*arithmeticExpression);
     if( token.type != RELATIONAL_OPERATOR )

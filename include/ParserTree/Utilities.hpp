@@ -4,17 +4,17 @@
 #include <string>
 #include "Node.hpp"
 
-std::string conditionToString(Condition* condtion);
-std::string primaryExpressionToString(PrimaryExpression* primaryExpression);
-std::string arithmeticExpressionToString(ArithmeticExpression* arithmeticExpression);
-std::string preIncrementationToString(PreIncrementation* preIncrementation);
-std::string initiationToString(Initiation* initiation);
-std::string assigmentToString(Assigment* assigment);
-std::string variableToString(Variable* variable);
-std::string loopToString(Loop* loop);
-std::string operationToString(Operation* oper);
-std::string programToString(Program* tree);
-std::string treeToString(ParserTree tree);
+std::string conditionToString(Condition* condtion, bool whitespaces);
+std::string primaryExpressionToString(PrimaryExpression* primaryExpression, bool whitespaces);
+std::string arithmeticExpressionToString(ArithmeticExpression* arithmeticExpression, bool whitespaces);
+std::string preIncrementationToString(PreIncrementation* preIncrementation, bool whitespaces);
+std::string initiationToString(Initiation* initiation, bool whitespaces);
+std::string assigmentToString(Assigment* assigment, bool whitespaces);
+std::string variableToString(Variable* variable, bool whitespaces);
+std::string loopToString(Loop* loop, bool whitespaces, int level);
+std::string operationToString(Operation* oper, bool whitespaces, int level);
+std::string programToString(Program* tree, bool whitespaces);
+std::string treeToString(ParserTree tree, bool whitespaces = false);
 
 
 

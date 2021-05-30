@@ -22,6 +22,7 @@ bool Optimizer::optimize()
     if(!analyzer->analyze())
     {
         cout << "Cannot optimize - error in code\n";
+        tree = NULL;
         return false;
     }
 
