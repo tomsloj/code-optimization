@@ -790,5 +790,64 @@ BOOST_AUTO_TEST_CASE( optimizer_initiation_with_used_in_for2 )
     BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
 }
 
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_1 )
+{
+    string source = "int a;int b[100];int c[100];for(int i=1;i<100;i++){a=5;b[i]=c[i]*a;}";
+    string optimized = "int a;int b[100];int c[100];a=5;for(int i=1;i<100;i++){b[i]=c[i]*a;}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_2 )
+{
+    string source = "int i;int j;int a;int b[20];for(i=1;i<20;i++){for(j=1;j<20;j++){a=5;b[j]=a*i;}}";
+    string optimized = "int i;int j;int a;int b[20];a=5;for(i=1;i<20;i++){for(j=1;j<20;j++){b[j]=a*i;}}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_3 )
+{
+    string source = "int i;int j;int a;int b[20];int c[20];for (i=1; i<a; i++){for (j=1; j<20; j++){a = 5; b[j] = a * i;}a = 5 * b[i];c[i] = a - 10;}";
+    string optimized = "int i;int j;int a;int b[20];int c[20];for(i=1;i<a;i++){a=5;for(j=1;j<20;j++){b[j]=a*i;}a=5*b[i];c[i]=a-10;}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_4 )
+{
+    string source = "int a = 3;int b[20];for (int i=1; i<20; i++){b[i] = 2 * a; a = 5; a = a + 1;}";
+    string optimized = "int a=3;int b[20];for(int i=1;i<20;i++){b[i]=2*a;a=5;a=a+1;}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_5 )
+{
+    string source = "int i;int a;int b[20];int c;for (i=1; i<20; i++){a = 5; c = 10; b[i] = 2 * a + c; a = a + 1;}";
+    string optimized = "int i;int a;int b[20];int c;a=5;c=10;for(i=1;i<20;i++){b[i]=2*a+c;a=a+1;}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
+BOOST_AUTO_TEST_CASE( optimizer_test_from_doc_6 )
+{
+    string source = "for(int a=0;a<10;++a){for(int b=0;b<20;++b){int x=0;for(int c=0;c<10;++c){x=x+2;}}}";
+    string optimized = "int x=0;for(int a=0;a<10;++a){for(int b=0;b<20;++b){for(int c=0;c<10;++c){x=x+2;}}}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
 
 BOOST_AUTO_TEST_SUITE_END()

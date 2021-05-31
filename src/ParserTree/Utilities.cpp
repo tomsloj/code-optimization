@@ -155,6 +155,8 @@ std::string operationToString(Operation* oper, bool whitespaces, int level)
         {
             auto p = get<pair<Variable*, Assigment*> >(oper->getOper());
             s += variableToString(p.first, whitespaces);
+            if(whitespaces)
+                s += " ";
             s += assigmentToString(p.second, whitespaces);
             s += ";";
             return  s;
@@ -211,6 +213,8 @@ std::string loopToString(Loop* loop, bool whitespaces, int level)
             Variable* var = p.first;
             Assigment* ass = p.second;
             s += variableToString(var, whitespaces);
+            if(whitespaces)
+                s += " ";
             s += assigmentToString(ass, whitespaces);
         }
     }

@@ -74,17 +74,7 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
         case 0:
         {
             // pętla
-            vector<struct VarDetails> varsCopy = varMap;
-            for(auto var = varMap.begin(); var != varMap.end(); ++var)
-            {
-                var->alreadyUsed = false;
-            }
             vector<Operation*> operations = optimizeLoop(*get<Loop*>(operation.getOper()), level + 1, usedThisLevel);
-            for(auto i = 0; i < varsCopy.size(); ++i)
-            {
-                varsCopy[i].alreadyUsed = varsCopy[i].alreadyUsed || varMap[i].alreadyUsed;
-            }
-            varMap = varsCopy;
             return operations;
             break;
         }
@@ -241,6 +231,16 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<
     for(int i = 0; i < loop.operations.size(); ++i)
     {
         auto operation = loop.operations.begin() + i;
+        vector<struct VarDetails> varsCopy = varMap;
+        bool removed;
+        if((*operation)->getOper().index() == 0)
+        {
+            // varsCopy = varMap;
+            for(auto var = varMap.begin(); var != varMap.end(); ++var)
+            {
+                var->alreadyUsed = false;
+            }
+        }
         variant< bool, vector<Operation*> > vec = optimizeOperation(**operation, level + 1, usedNamesDownLevel, usedNames);
         if(vec.index() == 0 && get<bool>(vec))
         {
@@ -252,6 +252,7 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<
         // analizujemy operacje z wyższego poziomu
         else if(vec.index() == 1)
         {
+            swap(varsCopy, varMap);
             vector<Operation*> otherLevelOperations = get< vector<Operation*> >(vec);
             for(auto oper = otherLevelOperations.begin(); oper != otherLevelOperations.end(); ++oper)
             {
@@ -266,6 +267,19 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<
             //dokładamy operacje
             i += otherLevelOperations.size();
             loop.operations.insert(operation, otherLevelOperations.begin(), otherLevelOperations.end());
+            swap(varsCopy, varMap);
+        }
+        // if((*operation)->getOper().index() == 0)
+        {
+            for(auto i = 0; i < varsCopy.size(); ++i)
+            {
+                varsCopy[i].alreadyUsed = varsCopy[i].alreadyUsed || varMap[i].alreadyUsed;
+            }
+            for(auto i = varsCopy.size(); i < varMap.size(); ++i)
+            {
+                varsCopy.push_back(varMap[i]);
+            }
+            varMap = varsCopy;
         }
     }
     removeLevel(level);
