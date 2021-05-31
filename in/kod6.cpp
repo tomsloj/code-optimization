@@ -1,6 +1,8 @@
-int i;
-int a;
-int b[20];
-int c;
-for (i=1; i<20; i++){a = 5; c = 10; b[i] = 2 * a + c; a = a + 1;}int i; int a; int b[20]; int c;
-for (i=1; i<20; i++){a = 5; c = 10; b[i] = 2 * a + c; a = a + 1;}
+for(int a = 0; a < 10; ++a){
+	for(int b = 0; b < 20; ++b){
+		int x = 0;
+		for(int c = 0; c < 10; ++c){
+			x = x + 2;
+		}
+	}
+}
