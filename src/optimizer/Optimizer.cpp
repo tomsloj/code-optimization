@@ -83,8 +83,9 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
             // przypisanie
             auto p = get<pair<Variable*, Assigment*> >(operation.getOper());
             bool used = isUsed(*p.first);
+            bool table = isTable(*p.first);
             int varLevel = getVariableLevel(*p.first);
-            if(signAssigment(*p.second) && !used && varLevel < level - 1)
+            if(signAssigment(*p.second) && !used && varLevel < level - 1 && !table)
             {
                 return true;
             }
@@ -309,6 +310,8 @@ bool Optimizer::signInitiation(Initiation& initiation, int level,  multiset<stri
     }
     if(level <= varLevel + 2)
         return false;
+    if(bool(initiation.getVariable()->getIndex()))
+        return false;
     return true;
 }
 
@@ -399,7 +402,8 @@ void Optimizer::addVariable(Token token, bool isTable, int level)
     {
         name,
         level,
-        false
+        false,
+        isTable
     };
     varMap.push_back(varInfo);
 }
@@ -457,6 +461,30 @@ bool Optimizer::isUsed(Variable& variable)
         }
     }
     return it->alreadyUsed;
+}
+
+bool Optimizer::isTable(Variable& variable)
+{
+    string name = get<string>(variable.getVariableName().value);
+    struct VarDetails varInfo
+    {
+        "",
+        -1,
+        false
+    }; 
+    vector<struct VarDetails>::iterator it;
+    for(auto var = varMap.begin(); var != varMap.end(); ++var)
+    {
+        if(var->name == name)
+        {
+            if(var->level > varInfo.level)
+            {
+                varInfo = *var;
+                it = var;
+            }
+        }
+    }
+    return it->isTable;
 }
 
 int Optimizer::getVariableLevel(Variable& variable)

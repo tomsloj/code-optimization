@@ -14,6 +14,7 @@ struct VarDetails
     std::string name;
     int level;
     bool alreadyUsed = false;
+    bool isTable = false;
 };
 
 class Optimizer
@@ -39,6 +40,7 @@ class Optimizer
         bool isMutable(ArithmeticExpression& arithmeticExpression);
         bool isMutable(PrimaryExpression& primaryExpression);
         bool isUsed(Variable& variable);
+        bool isTable(Variable& variable);
         int getVariableLevel(Variable& variable);
 
         void addVariable(Token token, bool isTable, int level);

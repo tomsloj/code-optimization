@@ -750,6 +750,16 @@ BOOST_AUTO_TEST_CASE( optimizer_assigment_with_multiple_levels_initiations )
     BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
 }
 
+BOOST_AUTO_TEST_CASE( optimizer_assigment_with_array )
+{
+    string source = "int a[10];int b[100];int c[100];for (int i=1; i<100; i++) { a[9]=5; b[i] = c[i] *a[3]; }";
+    string optimized = "int a[10];int b[100];int c[100];for(int i=1;i<100;i++){a[9]=5;b[i]=c[i]*a[3];}";
+    Optimizer optimizer(source);
+    optimizer.optimize();
+
+    BOOST_CHECK_EQUAL(treeToString(*optimizer.getTree()), optimized);
+}
+
 BOOST_AUTO_TEST_CASE( optimizer_assigment_with_self_refference )
 {
     string source = "int a;for(int b=0;b<0;++b){a = a;}";
