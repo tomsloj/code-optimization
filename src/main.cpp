@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
                     cout << "Cannot open output file\n";
                 }
             }
-
         }
     }
     else

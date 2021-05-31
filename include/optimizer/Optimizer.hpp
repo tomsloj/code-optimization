@@ -42,15 +42,24 @@ class Optimizer
         bool isUsed(Variable& variable);
         bool isTable(Variable& variable);
         int getVariableLevel(Variable& variable);
+        int getVariableLevel(Variable& variable, std::vector<struct VarDetails>* varMap);
 
         void addVariable(Token token, bool isTable, int level);
+        void addVariable(Token token, bool isTable, int level, std::vector<struct VarDetails>* varMap);
         void removeLevel(int level);
         AnalizeError createError(ErrorType type, string message, string codePart, Token token);
-        void writeError(AnalizeError error);
 
         std::multiset<string> getUsed(Operation& operation);
         std::multiset<string> getUsed(PrimaryExpression& primaryExpression);
         std::multiset<string> getUsed(Initiation& initiation);
+
+        std::vector<struct VarDetails>varMapToCondition;
+
+        bool findUsageAndChange(vector<Operation*> operations, string varName, int varLevel, int currentLevel);
+        int findUsageAndChange(Operation& operation, int currentState, string varName, int varLevel, int currentLevel);
+        bool findUsageAndChange(PrimaryExpression& primaryExpression, int currentState, string varName, int varLevel, int currentLevel);
+
+        void changeLevel(Variable& variable);
 
     public:
         Optimizer(string path, bool isFile = false);

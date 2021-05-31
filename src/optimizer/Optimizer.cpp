@@ -127,9 +127,6 @@ variant< bool, vector<Operation*> > Optimizer::optimizeOperation(Operation& oper
 
 std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<string> usedNamesDownLevel)
 {
-    // TODO pierwsze przejście zbierające użycia i
-    // warunek na optymalizację inicjacji jeżeli assigment jest z samych stałych
-    // oraz nazwa zmiennej nie użyta na żadnym z 2 lvl
     multiset<string> empty1;
     multiset<string> usedNames;
     if(loop.isInitiation())
@@ -245,8 +242,46 @@ std::vector<Operation*> Optimizer::optimizeLoop(Loop& loop, int level, multiset<
         variant< bool, vector<Operation*> > vec = optimizeOperation(**operation, level + 1, usedNamesDownLevel, usedNames);
         if(vec.index() == 0 && get<bool>(vec))
         {
+            if((*operation)->getOper().index() != 3)
+            {
+                vector<Operation*> operationsToCheck;
+                for(int j = i + 1; j < loop.operations.size(); ++j )
+                {
+                    operationsToCheck.push_back(*(loop.operations.begin() + j));
+                }
+                auto p = get<pair<Variable*, Assigment*> >((*operation)->getOper());
+                string name = get<string>(p.first->getVariableName().value);
+                int varLevel = getVariableLevel(*p.first);
+                if(findUsageAndChange(operationsToCheck, name, varLevel, level))
+                {
+                    for(auto i = 0; i < varsCopy.size(); ++i)
+                    {
+                        varsCopy[i].alreadyUsed = varsCopy[i].alreadyUsed || varMap[i].alreadyUsed;
+                    }
+                    for(auto i = varsCopy.size(); i < varMap.size(); ++i)
+                    {
+                        varsCopy.push_back(varMap[i]);
+                    }
+                    varMap = varsCopy;
+                    continue;
+                }
+            }
+
+            if((*operation)->getOper().index() == 3)
+            {
+                Initiation* initiation = get<Initiation*>((*operation)->getOper());
+                Variable* variable = initiation->getVariable();
+                changeLevel(*variable);
+                usedNames.erase(get<string>(variable->getVariableName().value));
+            }
+            else
+            {
+                pair<Variable*, Assigment*> p = get<pair<Variable*, Assigment*>>((*operation)->getOper());
+                changeLevel(*p.first);
+            }
             operations.push_back(*operation);
             loop.operations.erase(operation, operation + 1);
+            
             operation--;
             i--;
         }
@@ -302,8 +337,6 @@ bool Optimizer::signInitiation(Initiation& initiation, int level,  multiset<stri
         if(!signAssigment(*initiation.getAssigment()))
             return false;
     string name = get<string>(initiation.getVariable()->getVariableName().value);
-    auto tmp1 = usedNamesDownLevel.find(name);
-    auto tmp2 = usedThisLevel.find(name);
     if(usedNamesDownLevel.count(name) >= 1 || usedThisLevel.count(name) > 1)
     {
         return false;
@@ -406,6 +439,19 @@ void Optimizer::addVariable(Token token, bool isTable, int level)
         isTable
     };
     varMap.push_back(varInfo);
+}
+
+void Optimizer::addVariable(Token token, bool isTable, int level, vector<struct VarDetails>* varMap)
+{
+    string name = get<string>(token.value);
+    struct VarDetails varInfo
+    {
+        name,
+        level,
+        false,
+        isTable
+    };
+    varMap->push_back(varInfo);
 }
 
 void Optimizer::removeLevel(int level)
@@ -513,6 +559,32 @@ int Optimizer::getVariableLevel(Variable& variable)
     return it->level;
 }
 
+int Optimizer::getVariableLevel(Variable& variable, std::vector<struct VarDetails>* varMap)
+{
+    string name = get<string>(variable.getVariableName().value);
+    struct VarDetails varInfo
+    {
+        "",
+        -1,
+        false
+    }; 
+    vector<struct VarDetails>::iterator it = varMap->end();
+    for(auto var = varMap->begin(); var != varMap->end(); ++var)
+    {
+        if(var->name == name)
+        {
+            if(var->level > varInfo.level)
+            {
+                varInfo = *var;
+                it = var;
+            }
+        }
+    }
+    if(it == varMap->end())
+        return -2;
+    return it->level;
+}
+
 AnalizeError Optimizer::createError(ErrorType type, string message, string codePart, Token token)
 {
     AnalizeError error 
@@ -527,14 +599,7 @@ AnalizeError Optimizer::createError(ErrorType type, string message, string codeP
     return error;
 }
 
-void Optimizer::writeError(AnalizeError error)
-{
-    cout << "ANALYZER ERROR: line " + to_string(error.line) + 
-    "; sign " + to_string(error.signNumber) + "\n";
-    cout << error.message << "\n";
-}
-
-multiset<string> Optimizer::getUsed(Operation& operation)
+std::multiset<string> Optimizer::getUsed(Operation& operation)
 {
     multiset<string> usedNames;
     switch (operation.getOper().index())
@@ -634,4 +699,157 @@ multiset<string> Optimizer::getUsed(Initiation& initiation)
         }
     }
     return usedNames;
+}
+
+
+bool Optimizer::findUsageAndChange(vector<Operation*> operations, string varName, int varLevel, int currentLevel)
+{
+    int state = 0;
+    varMapToCondition = varMap;
+    for(auto operation : operations)
+    {
+        state = findUsageAndChange(*operation, state, varName, varLevel, currentLevel);
+        if(state == 2)
+            return true;
+    }
+    return false;
+}
+
+int Optimizer::findUsageAndChange(Operation& operation, int currentState, string varName, int varLevel, int currentLevel)
+{
+    multiset<string> usedNames;
+    switch (operation.getOper().index())
+    {
+        case 0:
+        {
+            int state = currentState;
+            for(auto oper : get<Loop*>(operation.getOper())->operations)
+            {
+                state = findUsageAndChange(*oper, state, varName, varLevel, currentLevel + 2);
+                if(state == 2)
+                    return 2;
+            }
+            break;
+        }
+        case 1:
+        {
+            // przypisanie
+            auto p = get<pair<Variable*, Assigment*> >(operation.getOper());
+            if(currentState == 1)
+            {
+                if(varName == get<string>(p.first->getVariableName().value) && varLevel == getVariableLevel(*p.first, &varMapToCondition))
+                {
+                    return 2;
+                }
+            }
+            for(auto x : p.second->getArithmeticExpression()->primaryExpressions)
+            {
+                if(currentState == 0)
+                {
+                    if(findUsageAndChange(*x, currentState, varName, varLevel, currentLevel))
+                    {
+                        currentState = 1;
+                    }
+                }
+            }
+            break;
+        }
+        case 2:
+        {
+            // post inkrementacja/dekrementacja
+            return 2;
+            break;
+        }
+        case 3:
+        {
+            // inicjacja zmiennych
+            Initiation* initiation = get<Initiation*>(operation.getOper());
+            addVariable(initiation->getVariable()->getVariableName(), false, currentLevel, &varMapToCondition);
+            if(initiation->hasAssigment() && currentState == 0)
+                for(auto pExpression : initiation->getAssigment()->getArithmeticExpression()->primaryExpressions)
+                {
+                    if(findUsageAndChange(*pExpression, currentState, varName, varLevel, currentLevel))
+                    {
+                        currentState = 1;
+                    }
+                }
+            return currentState;
+            break;
+        }
+        case 4:
+        {
+            // preinkrementacja
+            return 2;
+            break;
+        }
+    }
+    return currentState;
+}
+
+bool Optimizer::findUsageAndChange(PrimaryExpression& primaryExpression, int currentState, string varName, int varLevel, int currentLevel)
+{
+    switch(primaryExpression.getPExpression().index())
+    {
+        case 0:
+        {
+            // variable
+            Variable* variable = get<Variable*>(primaryExpression.getPExpression());
+            if(get<string>(variable->getVariableName().value) == varName && getVariableLevel(*variable, &varMapToCondition) == varLevel)
+            {
+                return true;
+            }
+            break;
+        }
+        case 1:
+        {
+            // post inkrementacja/dekrementacja
+            auto p = get<pair<Variable*, Token> >(primaryExpression.getPExpression());
+            if(get<string>(p.first->getVariableName().value) == varName && getVariableLevel(*p.first, &varMapToCondition) == varLevel)
+            {
+                return true;
+            }
+            break;
+        }
+        case 2:
+        {
+            // stala (numer)
+            break;
+        }
+        case 3:
+        {
+            // preinkrementacja/dekrementacja
+            PreIncrementation* preIncrementation = get<PreIncrementation*>(primaryExpression.getPExpression());
+            if(get<string>(preIncrementation->getVariable()->getVariableName().value) == varName && getVariableLevel(*preIncrementation->getVariable(), &varMapToCondition) == varLevel)
+            {
+                return true;
+            }
+            break;
+        }
+    }
+    return false;
+}
+
+
+void Optimizer::changeLevel(Variable& variable)
+{
+    string name = get<string>(variable.getVariableName().value);
+    struct VarDetails varInfo
+    {
+        "",
+        -1,
+        false
+    }; 
+    vector<struct VarDetails>::iterator it;
+    for(auto var = varMap.begin(); var != varMap.end(); ++var)
+    {
+        if(var->name == name)
+        {
+            if(var->level > varInfo.level)
+            {
+                varInfo = *var;
+                it = var;
+            }
+        }
+    }
+    it->level = it->level - 2;
 }
